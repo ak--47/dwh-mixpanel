@@ -1,0 +1,8 @@
+.DS_store
+scratch.ts
+.env
+node_modules
+environments/*
+!environments/.gitkeep
+logs/*
+!logs/.gitkeep
