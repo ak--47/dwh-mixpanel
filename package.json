@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "scratch": "nodemon --ignore ./node_modules/ --esm scratch.ts"
+    "scratch": "nodemon --ignore ./node_modules/ --ignore ./tmp/ --esm scratch.ts"
   },
   "author": "AK",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/bigquery": "^6.0.3",
     "ak-tools": "^1.0.19",
     "dotenv": "^16.0.3",
     "snowflake-promise": "^4.5.0"

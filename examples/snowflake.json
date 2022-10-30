@@ -1,0 +1,30 @@
+{
+    "dwh": "snowflake",
+    "auth": {
+        "account": "",
+        "username": "",
+        "password": "",
+        "database": "",
+        "schema": "",
+        "warehouse": "COMPUTE_WH"
+    },
+    "sql": "",
+    "transform": {
+        "distinct_id_col": "",
+        "time_col": "",
+        "insert_id_col": ""
+    },
+    "options": {
+        "silent": false,
+        "test": false,
+        "logFile": "",
+        "strict": true
+    },
+    "mixpanel": {
+        "project_id": "",
+        "service_acct": "",
+        "sevice_secret": "",
+        "region": "US",
+        "type": "event"
+    }
+}

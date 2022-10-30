@@ -6,3 +6,5 @@ environments/*
 !environments/.gitkeep
 logs/*
 !logs/.gitkeep
+tmp/*
+!tmp/.gitkeep
