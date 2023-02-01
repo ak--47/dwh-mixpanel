@@ -1,34 +1,36 @@
 {
     "dwh": "bigquery",
     "auth": {
-        "type": "",
-        "project_id": "",
-        "private_key_id": "",
-        "private_key": "",
+        "project_id": "",        
+        "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
         "client_email": "",
-        "client_id": "",
-        "auth_uri": "",
-        "token_uri": "",
-        "auth_provider_x509_cert_url": "",
-        "client_x509_cert_url": ""
+		"location": "US"        
     },
-    "sql": "",
-    "transform": {
-        "distinct_id_col": "",
-        "time_col": "",
-        "insert_id_col": ""
+    "sql": "SELECT * FROM `myEventsTable`",
+    "mappings": {
+		"event_name_col": "foo",
+        "distinct_id_col": "bar",
+        "time_col": "baz",
+        "insert_id_col": "qux"
     },
     "options": {
-        "silent": false,
         "test": false,
-        "logFile": "",
-        "strict": true
+        "logFile": "./tmp/log.txt",
+		"strict": true,
+		"compress": false,
+		"verbose": true 
     },
     "mixpanel": {
         "project_id": "",
         "service_acct": "",
-        "sevice_secret": "",
+        "service_secret": "",
+		"api_secret": "",
+		"token": "",
         "region": "US",
-        "type": "event"
+        "type": "event",
+		"groupKey": "",
+		"lookupTableId": "",
+		"profileOperation": ""
+
     }
 }

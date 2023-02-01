@@ -8,23 +8,31 @@
         "schema": "",
         "warehouse": "COMPUTE_WH"
     },
-    "sql": "",
-    "transform": {
-        "distinct_id_col": "",
-        "time_col": "",
-        "insert_id_col": ""
+    "sql": "select * from eventdata",
+	"mappings": {
+		"event_name_col": "foo",
+        "distinct_id_col": "bar",
+        "time_col": "baz",
+        "insert_id_col": "qux"
     },
     "options": {
-        "silent": false,
         "test": false,
-        "logFile": "",
-        "strict": true
+        "logFile": "./tmp/log.txt",
+		"strict": true,
+		"compress": false,
+		"verbose": true 
     },
     "mixpanel": {
         "project_id": "",
         "service_acct": "",
-        "sevice_secret": "",
+        "service_secret": "",
+		"api_secret": "",
+		"token": "",
         "region": "US",
-        "type": "event"
+        "type": "event",
+		"groupKey": "",
+		"lookupTableId": "",
+		"profileOperation": ""
+
     }
 }

@@ -1,5 +1,7 @@
 .DS_store
 scratch.ts
+scratch.js
+scratchTwo.js
 .env
 node_modules
 environments/*

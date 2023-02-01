@@ -1,0 +1,10 @@
+{
+	"configurations": [
+		{
+			"command": "npm run scratch",
+			"name": "DEV",
+			"request": "launch",
+			"type": "node-terminal",
+		}
+	]
+}

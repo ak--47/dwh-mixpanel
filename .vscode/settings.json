@@ -3,5 +3,11 @@
 	"jest.autoRun": "off",
 	"files.exclude": {
 		"**/node_modules": true
-	}
+	},
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"typescript.implementationsCodeLens.enabled": true,
+	"cSpell.words": [
+		"DDTHH",
+		"gtoken"
+	]
 }
