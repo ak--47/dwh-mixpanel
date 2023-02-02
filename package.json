@@ -18,7 +18,7 @@
     "dotenv": "^16.0.3",
     "gtoken": "^6.1.2",
     "lodash": "^4.17.21",
-    "mixpanel-import": "^2.2.25",
+    "mixpanel-import": "^2.2.26",
     "snowflake-promise": "^4.5.0"
   },
   "type": "module",

@@ -36,11 +36,36 @@ export default class dwhConfig {
 		this.mappings = u.objDefault(spec.mappings || {}, defaultMappings);
 		this.options = u.objDefault(spec.options || {}, defaultOptions);
 		this.mixpanel = u.objDefault(spec.mixpanel || {}, defaultMixpanel);
+		this.dwhStore = {};
+		this.inCount = 0;
+		this.outCount = 0;
 	}
 
 	get type() {
 		return this.mixpanel.type.toLowerCase()
 	}
+
+	in() {
+		return this.inCount
+	}
+
+	out() {
+		return this.outCount
+	}
+
+	got() {
+		this.inCount++
+	}
+
+	sent() {
+		this.outCount++
+	}
+
+	// set dwhStore(metaData = {}) {
+	// 	for (const key in metaData) {
+	// 		this.dwhStore[key] = metaData[key]
+	// 	}
+	// }
 	
 	// ? methods
 	mpAuth() {
@@ -75,8 +100,8 @@ export default class dwhConfig {
 		if (this.dwh === 'bigquery') {
 			return {
 				projectId: this.auth.project_id,
-				email: this.auth.email,
-				privateKey: this.auth.privateKey,
+				email: this.auth.client_email,
+				privateKey: this.auth.private_key,
 				query: this.sql,
 				location: this.auth.location,
 			};

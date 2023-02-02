@@ -20,18 +20,34 @@ export default async function main(params = {}) {
 	//EXECUTE
 	const bq = await bigQuery(config, mpStream);
 
-
+	debugger;
 
 }
 
+const l = console.log
+
+emitter.on('query start', ()=>{
+	l('query start')
+})
+
+emitter.on('query end', ()=>{
+	l('query end')
+})
+
+emitter.on('stream start', ()=>{
+	l('stream start')
+})
+
+emitter.on('stream end', ()=>{
+	l('stream end')
+})
+
+emitter.once('import start', ()=>{
+	l('import start')
+})
 
 emitter.once('import end', (summary) => {
 	debugger;
 })
 
-/*
-----
-STREAMS
-----
-*/
 

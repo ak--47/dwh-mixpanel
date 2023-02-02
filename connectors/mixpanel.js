@@ -1,9 +1,11 @@
 import mp from "mixpanel-import";
 import Stream from 'stream';
 import emitter from '../emitter.js';
+import u from 'ak-tools'
 
 
 export default function createStream(config, cb = () => { }) {
+	let count = 0
 	const inStream = new Stream.PassThrough({
 		objectMode: true,
 	});
@@ -30,7 +32,8 @@ export default function createStream(config, cb = () => { }) {
 	});
 
 	outStream.on("data", (resp) => {
-		// debugger;
+		count++
+		u.progress('batch', count)
 		emitter.emit('import start')
 	});
 
