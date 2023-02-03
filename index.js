@@ -28,7 +28,7 @@ import * as Types from "./types/types.js";
 PIPELINE
 --------
 */
-export default async function main(params = {}) {
+async function main(params = {}) {
 	//CONFIG
 	const config = new Config({ ...params });
 	config.etlTime.start();
@@ -44,27 +44,37 @@ export default async function main(params = {}) {
 	const mpStream = createStream(config);
 
 	//DWH
-	switch (config.warehouse) {
-		case 'bigquery':
-			await bigQuery(config, mpStream);
-			break;
-		case 'snowflake':
-			// todo
-			break;
-		case 'athena':
-			// todo
-			break;
-		default:
-			if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);
-			mpStream.destroy()
-			throw new Error('unsupported warehouse', { cause: config.warehouse, config });			
+	try {
+		switch (config.warehouse) {
+			case 'bigquery':
+				await bigQuery(config, mpStream);
+				break;
+			case 'snowflake':
+				// todo
+				break;
+			case 'athena':
+				// todo
+				break;
+			default:
+				if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);
+				mpStream.destroy();
+				throw new Error('unsupported warehouse', { cause: config.warehouse, config });
+		}
+	}
+
+	catch (e) {
+		if (config.verbose) u.cLog(e, `${config.warehouse} error: ${e.message}`, `CRITICAL`);
+		mpStream.destroy();
+		debugger;
+		throw e;
 	}
 
 	//WAIT
 	try {
 		await pEvent(emitter, 'mp import end');
-	} catch (error) {
-		u.cLog(error, 'FAILURE', 'CRITICAL');
+	} catch (e) {
+		u.cLog(e, 'UNKNOWN FAILURE', 'CRITICAL');
+		throw e;
 	}
 
 	//LOGS + CLEANUP
@@ -128,4 +138,10 @@ emitter.once('mp import end', (config) => {
 	}
 })
 
+/*
+--------
+EXPORTS
+--------
+*/
 
+export default main

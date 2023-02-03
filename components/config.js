@@ -1,7 +1,7 @@
 import * as u from 'ak-tools';
 import dayjs from 'dayjs';
 // eslint-disable-next-line no-unused-vars
-import * as Types from "../types/types.js"
+import * as Types from "../types/types.js";
 
 /*
 --------
@@ -46,6 +46,7 @@ export default class dwhConfig {
 		this.mappings = u.objDefault(spec.mappings || {}, defaultMappings);
 		this.options = u.objDefault(spec.options || {}, defaultOptions);
 		this.mixpanel = u.objDefault(spec.mixpanel || {}, defaultMixpanel);
+		this.tags = spec.tags || {};
 
 		this.inCount = 0;
 		this.outCount = 0;
@@ -156,9 +157,16 @@ export default class dwhConfig {
 	dwhAuth() {
 		if (this.dwh === 'bigquery') {
 			return {
-				projectId: this.auth.project_id,
-				email: this.auth.client_email,
-				privateKey: this.auth.private_key,
+				type: this.auth.type,
+				project_id: this.auth.project_id,
+				private_key_id: this.auth.private_key_id,
+				private_key: this.auth.private_key,
+				client_email: this.auth.client_email,
+				client_id: this.auth.client_id,
+				client_x509_cert_url: this.auth.client_x509_cert_url,
+				auth_uri: this.auth.auth_uri,
+				token_uri: this.auth.token_uri,
+				auth_provider_x509_cert_url: this.auth.auth_provider_x509_cert_url,
 				query: this.sql,
 				location: this.auth.location,
 			};

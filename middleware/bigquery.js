@@ -1,18 +1,25 @@
 import transformer from '../components/transformer.js';
 import { BigQuery } from "@google-cloud/bigquery";
-import { GoogleToken } from "gtoken";
 import emitter from '../components/emitter.js';
+import { auth } from 'google-auth-library';
+import dayjs from "dayjs";
 
 export default async function (config, outStream) {
-	const { projectId, email, privateKey, query, location } = config.dwhAuth();
-	const gtoken = new GoogleToken({
-		email,
-		key: privateKey,
+
+	const { location, query, ...dwhAuth } = config.dwhAuth();
+	// todo support other auth types: https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest
+	const googAuth = auth.fromJSON(dwhAuth);
+
+	// docs: https://googleapis.dev/nodejs/bigquery/latest/index.html
+	const bigquery = new BigQuery({
+		// authClient: googAuth
+		projectId: dwhAuth.project_id,
+		credentials: {
+			client_email: dwhAuth.client_email,
+			private_key: dwhAuth.private_key
+		}
 	});
-	
-	// docs: https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
-	const bigquery = new BigQuery({ projectId, gtoken });
-	
+
 	// note: location must match that of the dataset(s) referenced in the query.
 	const options = {
 		query,
@@ -20,19 +27,23 @@ export default async function (config, outStream) {
 		jobTimeoutMs: 1000 * 60 * 60 * 60
 	};
 
-	const mpModel = transformer(config);	
-	emitter.emit('dwh query start', config);
-	
 	// Run the query as a job
+	emitter.emit('dwh query start', config);
 	const [job] = await bigquery.createQueryJob(options);
 	const [result] = await job.getMetadata();
+
+	//store metadata and determine time transform needed
 	config.store(result);
+	config.timeTransform = (time) => { return dayjs(time.value).valueOf(); };
+	// ! todo: examine schema to determine which fields are BigQuery timestamps
+	const mpModel = transformer(config);
+
 
 	return new Promise((resolve, reject) => {
 		job.on('complete', function (metadata) {
-			config.store(metadata)
+			config.store(metadata);
 			emitter.emit('dwh query end', config);
-			
+
 			// stream results
 			emitter.emit('dwh stream start', config);
 			job
