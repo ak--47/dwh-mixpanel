@@ -1,40 +1,40 @@
 import mp from "mixpanel-import";
 import Stream from 'stream';
-import emitter from '../emitter.js';
-import u from 'ak-tools'
-
+import emitter from '../components/emitter.js';
+import u from 'ak-tools';
 
 export default function createStream(config, cb = () => { }) {
-	let count = 0
+	let reqCount = 0;
 	const inStream = new Stream.PassThrough({
 		objectMode: true,
 	});
 
 	const outStream = mp.createMpStream(config.mpAuth(), config.mpOpts(), (err, results) => {
 		if (err) {
+			if (config.verbose) u.cLog(err, 'pipeline fail', 'ERROR');
 			throw err;
 		}
 		else {
+			config.store(results, 'mp');
 			cb(results);
 		}
-
-		emitter.emit('import end', results);
+		emitter.emit('mp import end', config);
 	});
 
 	inStream.pipe(outStream);
 
 	inStream.on("error", (err) => {
-		debugger;
+		if (config.verbose) u.cLog(err, 'dwh fail', 'ERROR');
 	});
 
 	outStream.on("error", (err) => {
-		debugger;
+		if (config.verbose) u.cLog(err, 'mp fail', 'ERROR');
 	});
 
-	outStream.on("data", (resp) => {
-		count++
-		u.progress('batch', count)
-		emitter.emit('import start')
+	outStream.on("data", () => {
+		reqCount++;
+		emitter.emit('mp import start', config);
+		u.progress('\tbatches', reqCount, 'sent:');
 	});
 
 	return inStream;

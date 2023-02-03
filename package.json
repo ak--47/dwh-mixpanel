@@ -12,13 +12,14 @@
   "dependencies": {
     "@aws-sdk/client-athena": "^3.199.0",
     "@google-cloud/bigquery": "^6.0.3",
-    "ak-tools": "^1.0.215",
+    "ak-tools": "^1.0.218",
     "aws-sdk": "^2.1258.0",
     "dayjs": "^1.11.6",
     "dotenv": "^16.0.3",
     "gtoken": "^6.1.2",
     "lodash": "^4.17.21",
-    "mixpanel-import": "^2.2.26",
+    "mixpanel-import": "^2.2.28",
+    "p-event": "^5.0.1",
     "snowflake-promise": "^4.5.0"
   },
   "type": "module",

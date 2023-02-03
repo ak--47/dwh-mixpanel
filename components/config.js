@@ -1,5 +1,7 @@
 import * as u from 'ak-tools';
 import dayjs from 'dayjs';
+// eslint-disable-next-line no-unused-vars
+import * as Types from "../types/types.js"
 
 /*
 --------
@@ -7,6 +9,7 @@ DEFAULTS
 --------
 */
 
+//todo
 const defaultMappings = {
 	event_name_col: "event",
 	distinct_id_col: "distinct_id",
@@ -28,46 +31,100 @@ const defaultMixpanel = {
 	type: "event"
 };
 
+/*
+------
+CONFIG
+------
+*/
+
 export default class dwhConfig {
 	constructor(spec) {
 		this.dwh = spec.dwh || ``;
 		this.sql = spec.sql || ``;
 		this.auth = spec.auth || {};
+
 		this.mappings = u.objDefault(spec.mappings || {}, defaultMappings);
 		this.options = u.objDefault(spec.options || {}, defaultOptions);
 		this.mixpanel = u.objDefault(spec.mixpanel || {}, defaultMixpanel);
-		this.dwhStore = {};
+
 		this.inCount = 0;
 		this.outCount = 0;
+
+		this.dwhStore = {};
+		this.mpStore = {};
+		this.arbStore = {};
+		this.timers = {
+			etl: u.timer('etl'),
+			query: u.timer('query'),
+			stream: u.timer('stream'),
+			import: u.timer('import')
+		};
 	}
 
 	get type() {
-		return this.mixpanel.type.toLowerCase()
+		return this.mixpanel.type.toLowerCase();
 	}
 
-	in() {
-		return this.inCount
+	get warehouse() {
+		return this.dwh.toLowerCase();
 	}
 
-	out() {
-		return this.outCount
+	get verbose() {
+		return this.options.verbose;
+	}
+
+	get queryTime() {
+		return this.timers.query;
+	}
+	get streamTime() {
+		return this.timers.stream;
+	}
+	get importTime() {
+		return this.timers.import;
+	}
+	get etlTime() {
+		return this.timers.etl;
+	}
+
+	in(pretty = true) {
+		return pretty ? u.comma(this.inCount) : this.inCount;
+	}
+
+	out(pretty = true) {
+		return pretty ? u.comma(this.outCount) : this.outCount;
 	}
 
 	got() {
-		this.inCount++
+		this.inCount++;
 	}
 
 	sent() {
-		this.outCount++
+		this.outCount++;
 	}
 
-	// set dwhStore(metaData = {}) {
-	// 	for (const key in metaData) {
-	// 		this.dwhStore[key] = metaData[key]
-	// 	}
-	// }
-	
 	// ? methods
+	store(data, where = 'dwh') {
+		if (where === 'dwh') {
+			this.dwhStore = u.objDefault(this.dwhStore, data);
+		}
+		else if (where === 'mp') {
+			this.mpStore = u.objDefault(this.mpStore, data);
+		}
+
+		else {
+			this.arbStore = u.objDefault(this.arbStore, data);
+		}
+	}
+
+	summary() {
+		return {
+			mixpanel: this.mpStore,
+			[this.dwh]: this.dwhStore,
+			time: this.etlTime.report(false)
+		};
+	}
+
+
 	mpAuth() {
 		const mp = this.mixpanel;
 		return {

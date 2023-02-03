@@ -3,7 +3,6 @@ import u from "ak-tools"
 
 export default function modelEvent(row, mappings) {
 	const { distinct_id_col, event_name_col, insert_id_col, time_col } = mappings;
-	//! todo, resolve mappings
 	const modeledEvent = {
 		event: row[event_name_col],
 		properties: {
@@ -18,7 +17,6 @@ export default function modelEvent(row, mappings) {
 	delete row[insert_id_col]
 	delete row[time_col]
 	
-
 	modeledEvent.properties = u.objDefault(modeledEvent.properties, row);
 
 	return modeledEvent;

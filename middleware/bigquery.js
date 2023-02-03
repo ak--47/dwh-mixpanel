@@ -1,7 +1,7 @@
-import transformer from '../transformer.js';
+import transformer from '../components/transformer.js';
 import { BigQuery } from "@google-cloud/bigquery";
 import { GoogleToken } from "gtoken";
-import emitter from '../emitter.js';
+import emitter from '../components/emitter.js';
 
 export default async function (config, outStream) {
 	const { projectId, email, privateKey, query, location } = config.dwhAuth();
@@ -9,9 +9,11 @@ export default async function (config, outStream) {
 		email,
 		key: privateKey,
 	});
-	// For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+	
+	// docs: https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
 	const bigquery = new BigQuery({ projectId, gtoken });
-	// Location must match that of the dataset(s) referenced in the query.
+	
+	// note: location must match that of the dataset(s) referenced in the query.
 	const options = {
 		query,
 		location,
@@ -19,17 +21,20 @@ export default async function (config, outStream) {
 	};
 
 	const mpModel = transformer(config);	
-	emitter.emit('query start', config);
+	emitter.emit('dwh query start', config);
+	
 	// Run the query as a job
 	const [job] = await bigquery.createQueryJob(options);
 	const [result] = await job.getMetadata();
-	config.dwhStore = result;
+	config.store(result);
 
 	return new Promise((resolve, reject) => {
 		job.on('complete', function (metadata) {
-			emitter.emit('query end', metadata);
+			config.store(metadata)
+			emitter.emit('dwh query end', config);
+			
 			// stream results
-			emitter.emit('stream start', config);
+			emitter.emit('dwh stream start', config);
 			job
 				.getQueryResultsStream()
 				.on("error", reject)
@@ -38,7 +43,7 @@ export default async function (config, outStream) {
 					outStream.push(mpModel(row));
 				})
 				.on("end", () => {
-					emitter.emit('stream end', config);
+					emitter.emit('dwh stream end', config);
 					outStream.push(null);
 					resolve(config);
 				});
