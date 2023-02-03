@@ -1,6 +1,6 @@
 import u from "ak-tools";
 
-export default function modelUsers(row, mappings, token, timeTransform, tags) {
+export default function modelGroups(row, mappings, token, groupKey, timeTransform, tags) {
 	const {
 		distinct_id_col,
 		name_col,
@@ -8,15 +8,14 @@ export default function modelUsers(row, mappings, token, timeTransform, tags) {
 		phone_col,
 		avatar_col,
 		created_col,
-		latitude_col,
-		longitude_col,
 		ip_col,
 		profileOperation = '$set'
 	} = mappings;
 
 	const modeledProfile = {
 		$token: token,
-		$distinct_id: row[distinct_id_col],
+		$group_key: groupKey,
+		$group_id: row[distinct_id_col],
 		$ip: "0",
 		$ignore_time: true,
 		[profileOperation]: {}
@@ -56,21 +55,11 @@ export default function modelUsers(row, mappings, token, timeTransform, tags) {
 		delete row[ip_col];
 	}
 
-	if (latitude_col) {
-		modeledProfile.$latitude = row[latitude_col];
-		modeledProfile[profileOperation]["Latitude"] = row[latitude_col];
-		delete row[latitude_col];
-	}
-
-	if (longitude_col) {
-		modeledProfile.$longitude = row[longitude_col];
-		modeledProfile[profileOperation]["Longitude"] = row[longitude_col];
-		delete row[longitude_col];
-	}
 
 	for (let key in tags) {
 		modeledProfile[profileOperation][key] = tags[key]
 	}
+
 
 	modeledProfile[profileOperation] = u.objDefault(modeledProfile[profileOperation], row);
 
