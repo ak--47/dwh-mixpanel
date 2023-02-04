@@ -169,6 +169,17 @@ export default class dwhConfig {
 				location: this.auth.location,
 			};
 		}
+		if (this.dwh === 'snowflake') {
+			return {
+				account: this.auth.account,
+				username: this.auth.username,
+				password: this.auth.password,
+				database: this.auth.database,
+				schema: this.auth.schema,
+				warehouse: this.auth.warehouse,
+				query: this.sql
+			}
+		}
 	}
 
 	//todo

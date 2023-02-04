@@ -16,6 +16,7 @@ DEPS
 import Config from "./components/config.js";
 import createStream from "./middleware/mixpanel.js";
 import bigQuery from './middleware/bigquery.js';
+import snowflake from './middleware/snowflake.js';
 import emitter from './components/emitter.js';
 import u from 'ak-tools';
 import { pEvent } from 'p-event';
@@ -53,7 +54,7 @@ async function main(params = {}) {
 				dwh = await bigQuery(config, mpStream);
 				break;
 			case 'snowflake':
-				// todo
+				dwh = await snowflake(config, mpStream);
 				break;
 			case 'athena':
 				// todo

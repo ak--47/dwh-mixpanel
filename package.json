@@ -6,7 +6,7 @@
   "scripts": {
     "scratch": "nodemon --inspect --ignore ./node_modules/ --ignore ./tmp/ scratchTwo.js",
     "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
-	"prune": "rm -rf ./logs/*"
+    "prune": "rm -rf ./logs/*"
   },
   "author": "AK",
   "license": "ISC",

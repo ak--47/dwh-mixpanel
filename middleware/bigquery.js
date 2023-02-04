@@ -8,13 +8,13 @@ import sql from 'node-sql-parser';
 import dayjs from "dayjs";
 
 
-export default async function (config, outStream) {
+export default async function bigquery(config, outStream) {
 	const { location, query, ...dwhAuth } = config.dwhAuth();
 	const sqlParse = new sql.Parser();
 	let tableList, columnList, ast;
 	try {
-		// eslint-disable-next-line no-unused-vars
 		({ tableList, columnList, ast } = sqlParse.parse(query, { database: 'BigQuery', }));
+		config.store({ sqlAnalysis: { tableList, columnList, ast } });
 	} catch (e) {
 		if (config.verbose) u.cLog("\ncould not parse SQL query to AST...\n\tthat's ok though!!!\n");
 	}
