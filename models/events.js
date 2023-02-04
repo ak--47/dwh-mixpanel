@@ -1,6 +1,6 @@
 import u from "ak-tools"
 
-export default function modelEvent(row, mappings, timeTransform, tags) {
+export default function modelEvent(row, mappings, timeFields, timeTransform, tags) {
 	const { distinct_id_col, event_name_col, insert_id_col, time_col } = mappings;
 	const modeledEvent = {
 		event: row[event_name_col],

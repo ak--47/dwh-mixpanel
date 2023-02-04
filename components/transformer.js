@@ -5,38 +5,49 @@ import tableModel from '../models/tables.js';
 import u from 'ak-tools';
 import _ from 'lodash'; // https://lodash.com/docs/4.17.15#curryRight
 
-export default function modelStreamedData(config) {
+export default function modelStreamedData(config, timeFields) {
+	// todo TIME FIELDS!
+
 	if (config.type === 'event') {
-		return _.partialRight(
+		return _.partial(
 			eventModel,
+			_,
 			config.mappings,
-			config.timeTransform,
-			config.tags || {});
-	}
-	if (config.type === 'user') {
-		return _.partialRight(
-			userModel,
-			config.mappings,
-			config.mixpanel.token,
-			config.timeTransform,
-			config.tags || {});
-	}
-	if (config.type === 'group') {
-		return _.partialRight(
-			groupModel,
-			config.mappings,
-			config.mixpanel.token,
-			config.mixpanel.groupKey,
+			timeFields,
 			config.timeTransform,
 			config.tags || {});
 	}
 
-	// todo
+	if (config.type === 'user') {
+		return _.partial(
+			userModel,
+			_,
+			config.mappings,
+			config.mixpanel.token,
+			timeFields,
+			config.timeTransform,
+			config.tags || {});
+	}
+	
+	if (config.type === 'group') {
+		return _.partial(
+			groupModel,
+			_,
+			config.mappings,
+			config.mixpanel.token,
+			config.mixpanel.groupKey,
+			timeFields,
+			config.timeTransform,
+			config.tags || {});
+	}
+
 	if (config.type === 'table') {
-		return _.partialRight(
+		return _.partial(
 			tableModel,
+			_,
 			config.mappings,
 			config.mixpanel.lookupTableId,
+			timeFields,
 			config.timeTransform,
 			config.tags || {});
 	}

@@ -7,7 +7,10 @@
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"typescript.implementationsCodeLens.enabled": true,
 	"cSpell.words": [
+		"DATETIME",
 		"DDTHH",
-		"gtoken"
+		"gtoken",
+		"papaparse",
+		"unparse"
 	]
 }

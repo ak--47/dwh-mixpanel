@@ -10,6 +10,7 @@ const timeout = 60000;
 const bqEvents = require('../environments/bigquery/events.json');
 const bqUsers = require('../environments/bigquery/users.json');
 const bqGroups = require('../environments/bigquery/groups.json');
+const bgTables = require('../environments/bigquery/tables.json')
 
 const opts = {
 	options: {
@@ -31,7 +32,7 @@ describe('bigQuery', () => {
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(6);
 		expect(mixpanel.errors.length).toBe(0);
-		expect(bigquery.status.state).toBe('DONE');
+		expect(bigquery.job.status.state).toBe('DONE');
 	
 
 	}, timeout);
@@ -42,9 +43,8 @@ describe('bigQuery', () => {
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(6);
 		expect(mixpanel.errors.length).toBe(0);
-		expect(bigquery.status.state).toBe('DONE');
+		expect(bigquery.job.status.state).toBe('DONE');
 	
-
 	}, timeout);
 
 
@@ -54,8 +54,17 @@ describe('bigQuery', () => {
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(51);
 		expect(mixpanel.errors.length).toBe(0);
-		expect(bigquery.status.state).toBe('DONE');
+		expect(bigquery.job.status.state).toBe('DONE');
 
+	}, timeout);
+
+	test('tables', async () => {
+		const { mixpanel, bigquery, time } = await main({ ...bgTables, ...opts });
+		expect(mixpanel.success).toBe(1000);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(1);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(bigquery.job.status.state).toBe('DONE');
 
 	}, timeout);
 });

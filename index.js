@@ -19,6 +19,7 @@ import bigQuery from './middleware/bigquery.js';
 import emitter from './components/emitter.js';
 import u from 'ak-tools';
 import { pEvent } from 'p-event';
+import mp from 'mixpanel-import';
 
 // eslint-disable-next-line no-unused-vars
 import * as Types from "./types/types.js";
@@ -29,25 +30,27 @@ PIPELINE
 --------
 */
 async function main(params = {}) {
-	//CONFIG
+	// * CONFIG
 	const config = new Config({ ...params });
 	config.etlTime.start();
 	if (config.verbose) u.cLog('\nSTART!');
+	config.validate();
 
-	//ENV 
+	// * ENV VARS
 	// todo
 
-	//CLI
+	// * CLI
 	// todo	
 
-	//MIXPANEL
+	//* MIXPANEL STREAM
 	const mpStream = createStream(config);
 
-	//DWH
+	//* DWH STREAM
+	let dwh;
 	try {
 		switch (config.warehouse) {
 			case 'bigquery':
-				await bigQuery(config, mpStream);
+				dwh = await bigQuery(config, mpStream);
 				break;
 			case 'snowflake':
 				// todo
@@ -65,19 +68,31 @@ async function main(params = {}) {
 	catch (e) {
 		if (config.verbose) u.cLog(e, `${config.warehouse} error: ${e.message}`, `CRITICAL`);
 		mpStream.destroy();
-		debugger;
+		// debugger;
 		throw e;
 	}
 
-	//WAIT
-	try {
-		await pEvent(emitter, 'mp import end');
-	} catch (e) {
-		u.cLog(e, 'UNKNOWN FAILURE', 'CRITICAL');
-		throw e;
+	// ? SPECIAL CASE: lookup tables cannot be streamed as batches
+	if (config.type === 'table') {
+		mpStream.destroy();
+		emitter.emit('mp import start', config);
+		const tableImport = await mp(config.mpAuth(), dwh, { ...config.mpOpts(), logs: false });
+		config.store(tableImport, 'mp');
+		emitter.emit('mp import end', config);
 	}
 
-	//LOGS + CLEANUP
+	else {
+		// * WAIT
+		try {
+			await pEvent(emitter, 'mp import end');
+		} catch (e) {
+			u.cLog(e, 'UNKNOWN FAILURE', 'CRITICAL');
+			throw e;
+		}
+	}
+
+
+	// * LOGS + CLEANUP
 	// todo
 	const result = config.summary();
 	return result;
@@ -136,7 +151,7 @@ emitter.once('mp import end', (config) => {
 		u.cLog(`\t(${successRate}% success rate)`);
 		u.cLog(`\ncheck out your data! https://mixpanel.com/project/${config.mpAuth().project}\n`);
 	}
-})
+});
 
 /*
 --------
@@ -144,4 +159,4 @@ EXPORTS
 --------
 */
 
-export default main
+export default main;

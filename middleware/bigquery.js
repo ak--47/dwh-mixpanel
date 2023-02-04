@@ -1,13 +1,27 @@
 import transformer from '../components/transformer.js';
-import { BigQuery } from "@google-cloud/bigquery";
 import emitter from '../components/emitter.js';
+import csvMaker from '../components/csv.js';
+import u from 'ak-tools';
+import { BigQuery } from "@google-cloud/bigquery";
 import { auth } from 'google-auth-library';
+import sql from 'node-sql-parser';
 import dayjs from "dayjs";
 
-export default async function (config, outStream) {
 
+export default async function (config, outStream) {
 	const { location, query, ...dwhAuth } = config.dwhAuth();
-	// todo support other auth types: https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest
+	const sqlParse = new sql.Parser();
+	let tableList, columnList, ast;
+	try {
+		// eslint-disable-next-line no-unused-vars
+		({ tableList, columnList, ast } = sqlParse.parse(query, { database: 'BigQuery', }));
+	} catch (e) {
+		if (config.verbose) u.cLog("\ncould not parse SQL query to AST...\n\tthat's ok though!!!\n");
+	}
+
+	// todo support other auth types: 
+	// ! https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest
+	// eslint-disable-next-line no-unused-vars
 	const googAuth = auth.fromJSON(dwhAuth);
 
 	// docs: https://googleapis.dev/nodejs/bigquery/latest/index.html
@@ -24,42 +38,67 @@ export default async function (config, outStream) {
 	const options = {
 		query,
 		location,
-		jobTimeoutMs: 1000 * 60 * 60 * 60
+		jobTimeoutMs: 1000 * 60 * 60 * 60 // ! todo: think about this
 	};
 
-	// Run the query as a job
+	// run the query as a job; get temp table's metadata and schema
 	emitter.emit('dwh query start', config);
-	const [job] = await bigquery.createQueryJob(options);
-	const [result] = await job.getMetadata();
-
-	//store metadata and determine time transform needed
-	config.store(result);
-	config.timeTransform = (time) => { return dayjs(time.value).valueOf(); };
-	// ! todo: examine schema to determine which fields are BigQuery timestamps
-	const mpModel = transformer(config);
+	const [job, jobMeta] = await bigquery.createQueryJob(options);
+	const { datasetId, tableId } = jobMeta.configuration.query.destinationTable;
+	const [tableMeta] = await bigquery.dataset(datasetId).table(tableId).get();
+	const { schema, ...tempTable } = tableMeta.metadata;
 
 
-	return new Promise((resolve, reject) => {
-		job.on('complete', function (metadata) {
-			config.store(metadata);
-			emitter.emit('dwh query end', config);
+	// store metadata and calc time transforms needed
+	config.store({ job: jobMeta });
+	config.store({ schema: schema.fields });
+	config.store({ table: tempTable });
 
-			// stream results
-			emitter.emit('dwh stream start', config);
-			job
-				.getQueryResultsStream()
-				.on("error", reject)
-				.on("data", (row) => {
-					config.got();
-					outStream.push(mpModel(row));
-				})
-				.on("end", () => {
-					emitter.emit('dwh stream end', config);
-					outStream.push(null);
-					resolve(config);
-				});
+	//model time transforms
+	const dateFields = schema.fields.filter(f => ['DATETIME', 'DATE', 'TIMESTAMP', 'TIME'].includes(f.type));
+	if (config.type === "event") {
+		//events get unix epoch
+		config.timeTransform = (time) => { return dayjs(time.value).valueOf(); };
+	}
+	else {
+		//all others get ISO
+		config.timeTransform = (time) => { return dayjs(time.value).format('YYYY-MM-DDTHH:mm:ss'); };
+	}
+
+	const mpModel = transformer(config, dateFields);
+
+	// tables cannot be streamed...they are returned as a CSV
+	if (config.type === 'table') {
+		emitter.emit('dwh query end', config);
+		const [rows] = await bigquery.dataset(datasetId).table(tableId).getRows();
+		const transformedRows = rows.map(mpModel);
+		const csv = csvMaker(transformedRows);
+		return csv;
+	}
+
+	else {
+		return new Promise((resolve, reject) => {
+			job.on('complete', function (metadata) {
+				config.store({ job: metadata });
+				emitter.emit('dwh query end', config);
+
+				// stream results
+				emitter.emit('dwh stream start', config);
+				job
+					.getQueryResultsStream()
+					.on("error", reject)
+					.on("data", (row) => {
+						config.got();
+						outStream.push(mpModel(row));
+					})
+					.on("end", () => {
+						emitter.emit('dwh stream end', config);
+						outStream.push(null);
+						resolve(config);
+					});
+			});
+
+
 		});
-
-
-	});
+	}
 }

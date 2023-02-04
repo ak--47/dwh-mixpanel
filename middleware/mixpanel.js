@@ -34,7 +34,7 @@ export default function createStream(config, cb = () => { }) {
 	outStream.on("data", () => {
 		reqCount++;
 		emitter.emit('mp import start', config);
-		u.progress('\tbatches', reqCount, 'sent:');
+		if (config.verbose) u.progress('\tbatches', reqCount, 'sent:');
 	});
 
 	return inStream;

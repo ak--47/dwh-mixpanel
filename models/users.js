@@ -1,6 +1,6 @@
 import u from "ak-tools";
 
-export default function modelUsers(row, mappings, token, timeTransform, tags) {
+export default function modelUsers(row, mappings, token, timeFields, timeTransform, tags) {
 	const {
 		distinct_id_col,
 		name_col,

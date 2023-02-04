@@ -1,6 +1,6 @@
 import u from "ak-tools";
 
-export default function modelGroups(row, mappings, token, groupKey, timeTransform, tags) {
+export default function modelGroups(row, mappings, token, groupKey, timeFields, timeTransform, tags) {
 	const {
 		distinct_id_col,
 		name_col,
