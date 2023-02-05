@@ -142,6 +142,8 @@ emitter.once('mp import end', (config) => {
 	config.etlTime.end(false);
 	const summary = config.summary();
 	const successRate = u.round(summary.mixpanel.success / summary.mixpanel.total * 100, 2);
+	const importTime = config.importTime.report(false).delta
+	const evPerSec = Math.floor((config.inCount / importTime) * 1000)
 
 	if (config.verbose) {
 		u.cLog(`\nmixpanel import end`);
@@ -149,7 +151,7 @@ emitter.once('mp import end', (config) => {
 		u.cLog(`\nCOMPLETE!`);
 		u.cLog(`\nETL processed COMPLETE!`);
 		u.cLog(`\tprocessed ${u.comma(summary.mixpanel.total)} ${config.type}s in ${summary.time.human}`);
-		u.cLog(`\t(${successRate}% success rate)`);
+		u.cLog(`\t(${successRate}% success rate; ~${u.comma(evPerSec)} RPS)`);
 		u.cLog(`\ncheck out your data! https://mixpanel.com/project/${config.mpAuth().project}\n`);
 	}
 });

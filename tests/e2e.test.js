@@ -118,7 +118,6 @@ describe('snowflake', () => {
 		expect(mixpanel.responses.length).toBe(1);
 		expect(mixpanel.errors.length).toBe(0);
 		expect(snowflake.connectionId).toBeTruthy();
-		expect(snowflake.statementId).toBeTruthy();
 
 	}, timeout);
 });

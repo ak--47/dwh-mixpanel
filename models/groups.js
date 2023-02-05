@@ -1,7 +1,7 @@
 import u from "ak-tools";
 
 export default function modelGroups(row, mappings, token, groupKey, timeFields, timeTransform, tags) {
-	const {
+	let {
 		distinct_id_col,
 		name_col,
 		email_col,
@@ -11,6 +11,7 @@ export default function modelGroups(row, mappings, token, groupKey, timeFields, 
 		ip_col,
 		profileOperation = '$set'
 	} = mappings;
+	profileOperation = profileOperation.toLowerCase();
 
 	const modeledProfile = {
 		$token: token,

@@ -1,7 +1,7 @@
 import u from "ak-tools";
 
 export default function modelUsers(row, mappings, token, timeFields, timeTransform, tags) {
-	const {
+	let {
 		distinct_id_col,
 		name_col,
 		email_col,
@@ -13,6 +13,7 @@ export default function modelUsers(row, mappings, token, timeFields, timeTransfo
 		ip_col,
 		profileOperation = '$set'
 	} = mappings;
+	profileOperation = profileOperation.toLowerCase();
 
 	const modeledProfile = {
 		$token: token,
@@ -69,7 +70,7 @@ export default function modelUsers(row, mappings, token, timeFields, timeTransfo
 	}
 
 	for (let key in tags) {
-		modeledProfile[profileOperation][key] = tags[key]
+		modeledProfile[profileOperation][key] = tags[key];
 	}
 
 	modeledProfile[profileOperation] = u.objDefault(modeledProfile[profileOperation], row);

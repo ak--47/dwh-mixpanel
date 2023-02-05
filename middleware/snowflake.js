@@ -25,7 +25,7 @@ export default async function snowflake(config, outStream) {
 	}
 
 	// * CONNECTION
-	const snowflake = new Snowflake(dwhAuth, { logLevel: 'error', logSql: console.log }, {});
+	const snowflake = new Snowflake(dwhAuth, { logLevel: 'error', logSql: config.log.bind(config) }, {});
 	await snowflake.connect();
 	config.store({ connectionId: snowflake.id });
 

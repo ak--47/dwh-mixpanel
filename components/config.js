@@ -53,6 +53,7 @@ export default class dwhConfig {
 		this.dwhStore = {};
 		this.mpStore = {};
 		this.arbStore = {};
+		this.logStore = [];
 		this.timers = {
 			etl: u.timer('etl'),
 			query: u.timer('query'),
@@ -115,11 +116,16 @@ export default class dwhConfig {
 		}
 	}
 
+	log(something) {
+		this.logStore.push(something)
+	}
+
 	summary() {
 		return {
 			mixpanel: this.mpStore,
 			[this.dwh]: this.dwhStore,
-			time: this.etlTime.report(false)
+			time: this.etlTime.report(false),
+			logs: this.logStore
 		};
 	}
 
