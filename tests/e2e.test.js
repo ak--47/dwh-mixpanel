@@ -17,6 +17,12 @@ const sflakeUsers = require('../environments/snowflake/users.json');
 const sflakeGroups = require('../environments/snowflake/groups.json');
 const sflakeTables = require('../environments/snowflake/tables.json');
 
+
+const athenaEvents = require('../environments/athena/events.json');
+const athenaUsers = require('../environments/athena/users.json');
+const athenaGroups = require('../environments/athena/groups.json');
+const athenaTables = require('../environments/athena/tables.json');
+
 const opts = {
 	options: {
 		"verbose": false
@@ -122,4 +128,52 @@ describe('snowflake', () => {
 	}, timeout);
 });
 
-// todo
+
+describe('athena', () => {
+	test('events', async () => {
+		const { mixpanel, athena, time } = await main({ ...athenaEvents, ...opts });
+		expect(mixpanel.success).toBe(10000);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(5);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(athena.connectionId).toBeTruthy();
+		expect(athena.statementId).toBeTruthy();
+
+
+	}, timeout);
+
+	//todo test for groups + users
+	test('users', async () => {
+		const { mixpanel, athena, time } = await main({ ...athenaUsers, ...opts });
+		expect(mixpanel.success).toBe(10005);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(6);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(athena.connectionId).toBeTruthy();
+		expect(athena.statementId).toBeTruthy();
+
+	}, timeout);
+
+
+	test('groups', async () => {
+		const { mixpanel, athena, time } = await main({ ...athenaGroups, ...opts });
+		expect(mixpanel.success).toBe(10005);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(51);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(athena.connectionId).toBeTruthy();
+		expect(athena.statementId).toBeTruthy();
+
+	}, timeout);
+
+	test('tables', async () => {
+		const { mixpanel, athena, time } = await main({ ...athenaTables, ...opts });
+		expect(mixpanel.success).toBe(1000);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(1);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(athena.connectionId).toBeTruthy();
+
+	}, timeout);
+});
+

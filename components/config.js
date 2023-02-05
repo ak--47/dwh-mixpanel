@@ -117,7 +117,7 @@ export default class dwhConfig {
 	}
 
 	log(something) {
-		this.logStore.push(something)
+		this.logStore.push(something);
 	}
 
 	summary() {
@@ -184,23 +184,32 @@ export default class dwhConfig {
 				schema: this.auth.schema,
 				warehouse: this.auth.warehouse,
 				query: this.sql
-			}
+			};
+		}
+
+		if (this.dwh === 'athena') {
+			return {
+				accessKeyId: this.auth.accessKeyId,
+				secretAccessKey: this.auth.secretAccessKey,
+				region: this.auth.region,
+				query: this.sql
+			};
 		}
 	}
 
 	//todo
 	validate() {
 		// lookup tables must have an id
-		if (this.type === 'table' && !this.mixpanel.lookupTableId) throw 'missing lookup table id'
+		if (this.type === 'table' && !this.mixpanel.lookupTableId) throw 'missing lookup table id';
 		// users + groups need a token
-		if (this.type === 'user' && !this.mixpanel.token) throw 'missing project token'
-		if (this.type === 'group' && !this.mixpanel.token) throw 'missing project token'
-		
+		if (this.type === 'user' && !this.mixpanel.token) throw 'missing project token';
+		if (this.type === 'group' && !this.mixpanel.token) throw 'missing project token';
+
 		//groups need a group key
-		if (this.type === 'group' && !this.mixpanel.groupKey) throw 'missing group key'
-		
+		if (this.type === 'group' && !this.mixpanel.groupKey) throw 'missing group key';
+
 		//events + lookups need an API secret or service acct
-		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret || !this.mixpanel.service_acct)) throw 'missing API secret or service acct'
+		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret || !this.mixpanel.service_acct)) throw 'missing API secret or service acct';
 
 	}
 }

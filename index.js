@@ -9,15 +9,26 @@ purpose: stream events/users/groups/tables into mixpanel... from the warehouse!
 */
 
 /*
+-----------
+MIDDLEWARE
+these are the main 'connectors'
+for all the sources
+-----------
+*/
+
+import createStream from "./middleware/mixpanel.js";
+import bigQuery from './middleware/bigquery.js';
+import snowflake from './middleware/snowflake.js';
+import athena from './middleware/athena.js';
+
+/*
 ----
 DEPS
 ----
 */
-import Config from "./components/config.js";
-import createStream from "./middleware/mixpanel.js";
-import bigQuery from './middleware/bigquery.js';
-import snowflake from './middleware/snowflake.js';
+
 import emitter from './components/emitter.js';
+import Config from "./components/config.js";
 import u from 'ak-tools';
 import { pEvent } from 'p-event';
 import mp from 'mixpanel-import';
@@ -57,7 +68,7 @@ async function main(params = {}) {
 				dwh = await snowflake(config, mpStream);
 				break;
 			case 'athena':
-				// todo
+				dwh = await athena(config, mpStream);
 				break;
 			default:
 				if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);
@@ -142,8 +153,8 @@ emitter.once('mp import end', (config) => {
 	config.etlTime.end(false);
 	const summary = config.summary();
 	const successRate = u.round(summary.mixpanel.success / summary.mixpanel.total * 100, 2);
-	const importTime = config.importTime.report(false).delta
-	const evPerSec = Math.floor((config.inCount / importTime) * 1000)
+	const importTime = config.importTime.report(false).delta;
+	const evPerSec = Math.floor((config.inCount / importTime) * 1000);
 
 	if (config.verbose) {
 		u.cLog(`\nmixpanel import end`);
