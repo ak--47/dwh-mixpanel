@@ -8,6 +8,8 @@ import sql from 'node-sql-parser';
 
 export default async function snowflake(config, outStream) {
 	const { query, ...dwhAuth } = config.dwhAuth();
+	
+	// * SQL ANALYSIS
 	const sqlParse = new sql.Parser();
 	let tableList, columnList, ast;
 	try {
@@ -27,30 +29,52 @@ export default async function snowflake(config, outStream) {
 	await snowflake.connect();
 	config.store({ connectionId: snowflake.id });
 
-	// * SQL
-	const statement = snowflake.createStatement({
-		sqlText: query,
-		streamResult: config.type !== "table"
-	});
+
+	// * SCHEMA
+	let schema;
+	try {
+		if (config.verbose) u.cLog('attempting to fetch schema...');
+		const schemaTemplate = `select TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, DATA_TYPE from ${dwhAuth.database.toUpperCase()}.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME in `;
+		const tables = ast.from.map((sqlPlan) => `'${sqlPlan.table.toUpperCase()}'`);
+		const schemaQuery = schemaTemplate + '(' + tables.join(",") + ')';
+		schema = await snowflake.execute(schemaQuery);
+		config.store({ schema });
+	} catch (e) {
+		if (config.verbose) u.cLog(`could not query schema:\n${e.message}\n\tthat's ok though...`);
+	}
+
 
 	// * MODELING
 	config.timeTransform = (row) => { return row.getTime(); };
-	const dateFields = [config.mappings.time_col];
+	let dateFields;
+	if (schema) {
+		dateFields = schema
+			.filter((col) => col.DATA_TYPE.includes("TIMESTAMP") || col.DATA_TYPE.includes("DATE"))
+			.map(col => col.COLUMN_NAME);
+	}
+	else {
+		dateFields = [config.mappings.time_col];
+	}
 	const mpModel = transformer(config, dateFields);
 
+	// tables cannot be streamed...they are returned as a CSV
 	if (config.type === 'table') {
-		// todo
-		// emitter.emit('dwh query end', config);
-		// const [rows] = await bigquery.dataset(datasetId).table(tableId).getRows();
-		// const transformedRows = rows.map(mpModel);
-		// const csv = csvMaker(transformedRows);
-		// return csv;
+		emitter.emit('dwh query start', config);
+		const rows = await snowflake.execute(query);
+		const transformedRows = rows.map(mpModel);
+		const csv = csvMaker(transformedRows);
+		emitter.emit('dwh query end', config);
+		return csv;
 	}
 
-	else {
-
-		// * STREAM
+	
+	// * STREAM
+	else {		
 		emitter.emit('dwh query start', config);
+		const statement = snowflake.createStatement({
+			sqlText: query,
+			streamResult: true
+		});
 		statement.execute();
 
 		return new Promise((resolve, reject) => {
@@ -79,5 +103,4 @@ export default async function snowflake(config, outStream) {
 				});
 		});
 	}
-
 }

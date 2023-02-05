@@ -13,6 +13,9 @@ const bqGroups = require('../environments/bigquery/groups.json');
 const bgTables = require('../environments/bigquery/tables.json');
 
 const sflakeEvents = require('../environments/snowflake/events.json');
+const sflakeUsers = require('../environments/snowflake/users.json');
+const sflakeGroups = require('../environments/snowflake/groups.json');
+const sflakeTables = require('../environments/snowflake/tables.json');
 
 const opts = {
 	options: {
@@ -85,6 +88,39 @@ describe('snowflake', () => {
 	}, timeout);
 
 	//todo test for groups + users
+	test('users', async () => {
+		const { mixpanel, snowflake, time } = await main({ ...sflakeUsers, ...opts });
+		expect(mixpanel.success).toBe(10005);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(6);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(snowflake.connectionId).toBeTruthy();
+		expect(snowflake.statementId).toBeTruthy();
+
+	}, timeout);
+
+
+	test('groups', async () => {
+		const { mixpanel, snowflake, time } = await main({ ...sflakeGroups, ...opts });
+		expect(mixpanel.success).toBe(10005);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(51);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(snowflake.connectionId).toBeTruthy();
+		expect(snowflake.statementId).toBeTruthy();
+
+	}, timeout);
+
+	test('tables', async () => {
+		const { mixpanel, snowflake, time } = await main({ ...sflakeTables, ...opts });
+		expect(mixpanel.success).toBe(1000);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(1);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(snowflake.connectionId).toBeTruthy();
+		expect(snowflake.statementId).toBeTruthy();
+
+	}, timeout);
 });
 
 // todo
