@@ -12,6 +12,7 @@ export default function createStream(config, cb = () => { }) {
 	const outStream = mp.createMpStream(config.mpAuth(), config.mpOpts(), (err, results) => {
 		if (err) {
 			if (config.verbose) u.cLog(err, 'pipeline fail', 'ERROR');
+			debugger;
 			throw err;
 		}
 		else {

@@ -14,16 +14,19 @@
     "@aws-sdk/client-athena": "^3.264.0",
     "@aws-sdk/client-s3": "^3.264.0",
     "@google-cloud/bigquery": "^6.0.3",
-    "ak-tools": "^1.0.218",
+    "ak-tools": "^1.0.219",
+    "async-iterator-to-stream": "^1.2.0",
     "dayjs": "^1.11.6",
     "dotenv": "^16.0.3",
     "google-auth-library": "^8.7.0",
+    "highland": "^2.13.5",
     "lodash": "^4.17.21",
-    "mixpanel-import": "^2.2.28",
+    "mixpanel-import": "^2.2.281",
     "node-sql-parser": "^4.6.4",
     "p-event": "^5.0.1",
     "papaparse": "^5.3.2",
-    "snowflake-promise": "^4.5.0"
+    "snowflake-promise": "^4.5.0",
+    "stream-json": "^1.7.5"
   },
   "type": "module",
   "devDependencies": {

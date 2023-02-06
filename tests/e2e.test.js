@@ -93,7 +93,6 @@ describe('snowflake', () => {
 
 	}, timeout);
 
-	//todo test for groups + users
 	test('users', async () => {
 		const { mixpanel, snowflake, time } = await main({ ...sflakeUsers, ...opts });
 		expect(mixpanel.success).toBe(10005);
@@ -136,8 +135,11 @@ describe('athena', () => {
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(5);
 		expect(mixpanel.errors.length).toBe(0);
-		expect(athena.connectionId).toBeTruthy();
-		expect(athena.statementId).toBeTruthy();
+		expect(athena.executionId).toBeTruthy();
+		expect(athena.schema.length).toBe(6);
+		expect(athena.deleteS3.$metadata.httpStatusCode).toBe(200);
+		expect(athena.deleteS3.Deleted.length).toBe(2);
+		expect(athena.state).toBe('SUCCEEDED');
 
 
 	}, timeout);
@@ -149,8 +151,10 @@ describe('athena', () => {
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(6);
 		expect(mixpanel.errors.length).toBe(0);
-		expect(athena.connectionId).toBeTruthy();
-		expect(athena.statementId).toBeTruthy();
+		expect(athena.schema.length).toBe(9);
+		expect(athena.deleteS3.$metadata.httpStatusCode).toBe(200);
+		expect(athena.deleteS3.Deleted.length).toBe(2);
+		expect(athena.state).toBe('SUCCEEDED');
 
 	}, timeout);
 
@@ -161,8 +165,10 @@ describe('athena', () => {
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(51);
 		expect(mixpanel.errors.length).toBe(0);
-		expect(athena.connectionId).toBeTruthy();
-		expect(athena.statementId).toBeTruthy();
+		expect(athena.schema.length).toBe(9);
+		expect(athena.deleteS3.$metadata.httpStatusCode).toBe(200);
+		expect(athena.deleteS3.Deleted.length).toBe(2);
+		expect(athena.state).toBe('SUCCEEDED');
 
 	}, timeout);
 
@@ -172,7 +178,10 @@ describe('athena', () => {
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(1);
 		expect(mixpanel.errors.length).toBe(0);
-		expect(athena.connectionId).toBeTruthy();
+		expect(athena.schema.length).toBe(6);
+		expect(athena.deleteS3.$metadata.httpStatusCode).toBe(200);
+		expect(athena.deleteS3.Deleted.length).toBe(2);
+		expect(athena.state).toBe('SUCCEEDED');
 
 	}, timeout);
 });
