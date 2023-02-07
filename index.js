@@ -27,11 +27,15 @@ DEPS
 ----
 */
 
+import esMain from 'es-main';
+import cli from './components/cli.js';
 import emitter from './components/emitter.js';
 import Config from "./components/config.js";
+import env from './components/env.js';
 import u from 'ak-tools';
-import { pEvent } from 'p-event';
 import mp from 'mixpanel-import';
+import { pEvent } from 'p-event';
+import _ from "lodash";
 
 // eslint-disable-next-line no-unused-vars
 import * as Types from "./types/types.js";
@@ -42,17 +46,24 @@ PIPELINE
 --------
 */
 async function main(params = {}) {
+	// * ENV VARS
+	const envVars = env();
+
+	// * CLI
+	// todo	
+
 	// * CONFIG
-	const config = new Config({ ...params });
+	const config = new Config(
+		_.merge(
+			u.clone(params),
+			u.clone(envVars)
+		)
+	);
+
 	config.etlTime.start();
 	if (config.verbose) u.cLog('\nSTART!');
 	config.validate();
 
-	// * ENV VARS
-	// todo
-
-	// * CLI
-	// todo	
 
 	//* MIXPANEL STREAM
 	const mpStream = createStream(config);
@@ -174,3 +185,23 @@ EXPORTS
 */
 
 export default main;
+
+//this allows the module to function as a standalone script
+if (esMain(import.meta)) {
+	cli().then(answers => {
+		const { params, nextStep } = answers;
+		if (nextStep.run) {
+			params.options.verbose = true;
+			return main(params);
+		}
+
+		else {
+			u.cLog('\nnothing left to do');
+			process.exit(0);
+		}
+	}).then((result) => {
+		debugger;
+		process.exit(0);
+	});
+
+}

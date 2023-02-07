@@ -5,6 +5,12 @@
 			"name": "DEV",
 			"request": "launch",
 			"type": "node-terminal",
+		},
+		{
+			"command": "npm run cli",
+			"name": "CLI",
+			"request": "launch",
+			"type": "node-terminal",
 		}
 	]
 }

@@ -201,6 +201,7 @@ export default class dwhConfig {
 	validate() {
 		// lookup tables must have an id
 		if (this.type === 'table' && !this.mixpanel.lookupTableId) throw 'missing lookup table id';
+		
 		// users + groups need a token
 		if (this.type === 'user' && !this.mixpanel.token) throw 'missing project token';
 		if (this.type === 'group' && !this.mixpanel.token) throw 'missing project token';

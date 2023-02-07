@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "scratch": "nodemon --inspect --ignore ./node_modules/ --ignore ./tmp/ scratchTwo.js",
+	"cli": "nodemon --inspect -I --ignore ./node_modules/ --ignore ./tmp/ index.js",
     "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
     "prune": "rm -rf ./logs/*"
   },
@@ -18,10 +19,12 @@
     "async-iterator-to-stream": "^1.2.0",
     "dayjs": "^1.11.6",
     "dotenv": "^16.0.3",
+    "es-main": "^1.2.0",
     "google-auth-library": "^8.7.0",
     "highland": "^2.13.5",
+    "inquirer": "^9.1.4",
     "lodash": "^4.17.21",
-    "mixpanel-import": "^2.2.281",
+    "mixpanel-import": "^2.2.284",
     "node-sql-parser": "^4.6.4",
     "p-event": "^5.0.1",
     "papaparse": "^5.3.2",
