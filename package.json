@@ -1,42 +1,50 @@
 {
-  "name": "dwh-mixpanel",
-  "version": "1.0.0",
-  "description": "rETL from a data warehouse to mixpanel",
-  "main": "index.js",
-  "scripts": {
-    "scratch": "nodemon --inspect --ignore ./node_modules/ --ignore ./tmp/ scratchTwo.js",
-    "cli": "node --inspect index.js",
-    "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "prune": "rm -rf ./logs/*"
-  },
-  "author": "AK",
-  "license": "ISC",
-  "dependencies": {
-    "@aws-sdk/client-athena": "^3.264.0",
-    "@aws-sdk/client-s3": "^3.264.0",
-    "@google-cloud/bigquery": "^6.0.3",
-    "ak-tools": "^1.0.219",
-    "async-iterator-to-stream": "^1.2.0",
-    "cli-box": "^6.0.10",
-    "dayjs": "^1.11.6",
-    "dotenv": "^16.0.3",
-    "es-main": "^1.2.0",
-    "google-auth-library": "^8.7.0",
-    "highland": "^2.13.5",
-    "inquirer": "^9.1.4",
-    "lodash": "^4.17.21",
-    "mixpanel-import": "^2.2.284",
-    "node-sql-parser": "^4.6.4",
-    "p-event": "^5.0.1",
-    "papaparse": "^5.3.2",
-    "snowflake-promise": "^4.5.0",
-    "stream-json": "^1.7.5"
-  },
-  "type": "module",
-  "devDependencies": {
-    "eslint": "^8.26.0",
-    "eslint-config-prettier": "^8.5.0",
-    "jest": "^29.2.2",
-    "npm-watch": "^0.11.0"
-  }
+	"name": "dwh-mixpanel",
+	"version": "1.0.0",
+	"description": "rETL from a data warehouse to mixpanel",
+	"main": "index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ak--47/dwh-mixpanel.git"
+	},
+	"scripts": {
+		"dev": "nodemon --inspect --ignore ./node_modules/ --ignore ./tmp/ ./tests/scratch.js",
+		"cli": "node --inspect index.js",
+		"test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
+		"prune": "rm -rf ./logs/*",
+		"post": "npm publish"
+	},
+	"bin": {
+		"dwh-mixpanel": "./index.js"
+	},
+	"author": "AK",
+	"license": "ISC",
+	"dependencies": {
+		"@aws-sdk/client-athena": "^3.264.0",
+		"@aws-sdk/client-s3": "^3.264.0",
+		"@google-cloud/bigquery": "^6.0.3",
+		"ak-tools": "^1.0.219",
+		"async-iterator-to-stream": "^1.2.0",
+		"cli-box": "^6.0.10",
+		"dayjs": "^1.11.6",
+		"dotenv": "^16.0.3",
+		"es-main": "^1.2.0",
+		"google-auth-library": "^8.7.0",
+		"highland": "^2.13.5",
+		"inquirer": "^9.1.4",
+		"lodash": "^4.17.21",
+		"mixpanel-import": "^2.2.284",
+		"node-sql-parser": "^4.6.4",
+		"p-event": "^5.0.1",
+		"papaparse": "^5.3.2",
+		"snowflake-promise": "^4.5.0",
+		"stream-json": "^1.7.5"
+	},
+	"type": "module",
+	"devDependencies": {
+		"eslint": "^8.26.0",
+		"eslint-config-prettier": "^8.5.0",
+		"jest": "^29.2.2",
+		"npm-watch": "^0.11.0"
+	}
 }
