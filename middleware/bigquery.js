@@ -20,7 +20,7 @@ export default async function bigquery(config, outStream) {
 	}
 
 	// todo support other auth types: 
-	// ! https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest
+	// ? https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest
 	// eslint-disable-next-line no-unused-vars
 	const googAuth = auth.fromJSON(dwhAuth);
 

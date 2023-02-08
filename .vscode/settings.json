@@ -9,8 +9,12 @@
 	"cSpell.words": [
 		"DATETIME",
 		"DDTHH",
+		"flinksql",
 		"gtoken",
 		"papaparse",
-		"unparse"
+		"tnpx",
+		"transactsql",
+		"unparse",
+		"walkthrough"
 	]
 }

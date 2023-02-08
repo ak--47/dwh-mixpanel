@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "scratch": "nodemon --inspect --ignore ./node_modules/ --ignore ./tmp/ scratchTwo.js",
-	"cli": "nodemon --inspect -I --ignore ./node_modules/ --ignore ./tmp/ index.js",
+    "cli": "node --inspect index.js",
     "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
     "prune": "rm -rf ./logs/*"
   },
@@ -17,6 +17,7 @@
     "@google-cloud/bigquery": "^6.0.3",
     "ak-tools": "^1.0.219",
     "async-iterator-to-stream": "^1.2.0",
+    "cli-box": "^6.0.10",
     "dayjs": "^1.11.6",
     "dotenv": "^16.0.3",
     "es-main": "^1.2.0",

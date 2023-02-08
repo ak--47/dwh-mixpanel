@@ -60,6 +60,8 @@ export default class dwhConfig {
 			stream: u.timer('stream'),
 			import: u.timer('import')
 		};
+
+		//todo check for a test run and modify SQL to limit to 100
 	}
 
 	get type() {
@@ -129,7 +131,6 @@ export default class dwhConfig {
 		};
 	}
 
-
 	mpAuth() {
 		const mp = this.mixpanel;
 		return {
@@ -143,6 +144,7 @@ export default class dwhConfig {
 		};
 
 	}
+
 	mpOpts() {
 		const mp = this.mixpanel;
 		const opt = this.options;
@@ -152,12 +154,14 @@ export default class dwhConfig {
 			streamFormat: 'json',
 			compress: opt.compress,
 			strict: opt.strict,
-			logs: opt.verbose,
-			fixData: false,
-			streamSize: opt.streamSize
+			streamSize: opt.streamSize,
+			logs: false,
+			fixData: false,			
+			verbose: false,
 
 		};
 	}
+
 	dwhAuth() {
 		if (this.dwh === 'bigquery') {
 			return {
@@ -197,11 +201,11 @@ export default class dwhConfig {
 		}
 	}
 
-	//todo
+	//todo improve validation
 	validate() {
 		// lookup tables must have an id
 		if (this.type === 'table' && !this.mixpanel.lookupTableId) throw 'missing lookup table id';
-		
+
 		// users + groups need a token
 		if (this.type === 'user' && !this.mixpanel.token) throw 'missing project token';
 		if (this.type === 'group' && !this.mixpanel.token) throw 'missing project token';
@@ -213,4 +217,10 @@ export default class dwhConfig {
 		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret || !this.mixpanel.service_acct)) throw 'missing API secret or service acct';
 
 	}
+
+	//todo test runs should modify the SQL query, but they shouldn't fail
+	testRun(isTest) {
+
+	}
+
 }

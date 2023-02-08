@@ -144,7 +144,6 @@ describe('athena', () => {
 
 	}, timeout);
 
-	//todo test for groups + users
 	test('users', async () => {
 		const { mixpanel, athena, time } = await main({ ...athenaUsers, ...opts });
 		expect(mixpanel.success).toBe(10005);

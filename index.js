@@ -49,9 +49,6 @@ async function main(params = {}) {
 	// * ENV VARS
 	const envVars = env();
 
-	// * CLI
-	// todo	
-
 	// * CONFIG
 	const config = new Config(
 		_.merge(
@@ -189,18 +186,26 @@ export default main;
 //this allows the module to function as a standalone script
 if (esMain(import.meta)) {
 	cli().then(answers => {
-		const { params, nextStep } = answers;
-		if (nextStep.run) {
+		const { params, run } = answers;
+		if (run) {
 			params.options.verbose = true;
 			return main(params);
 		}
 
 		else {
-			u.cLog('\nnothing left to do');
+			u.cLog('\nnothing left to do\n\no_0\n\n');
 			process.exit(0);
 		}
 	}).then((result) => {
-		debugger;
+		//todo if you want to do anything at all
+		debugger;		
+	}).catch((e) => {
+		u.cLog(`\nuh oh! something didn't work...\nthe error message is:\n\n\t${e.message}\n\n`)
+		u.cLog(`take a closer look at your config file and try again (it's usually credentials!)\n`)
+		u.cLog(`if you continue to be stuck, file an issue:\nhttps://github.com/ak--47/dwh-mixpanel/issues\n\n`)
+		process.exit(1);
+	}).finally(()=>{
+		u.cLog('\n\nhave a great day!\n\n')
 		process.exit(0);
 	});
 

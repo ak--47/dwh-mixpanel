@@ -1,4 +1,7 @@
 {
-    "verbose": true,
-    "transform": {}
+	"verbose": true,
+	"transform": {},
+	"moduleNameMapper": {
+		"#(.*)": "<rootDir>/node_modules/$1"
+	}
 }
