@@ -61,7 +61,6 @@ export default class dwhConfig {
 			import: u.timer('import')
 		};
 
-		//todo check for a test run and modify SQL to limit to 100
 	}
 
 	get type() {
@@ -154,10 +153,10 @@ export default class dwhConfig {
 			streamFormat: 'json',
 			compress: opt.compress,
 			strict: opt.strict,
-			streamSize: opt.streamSize,
 			logs: false,
 			fixData: false,			
 			verbose: false,
+			workers: opt.workers
 
 		};
 	}
@@ -215,12 +214,7 @@ export default class dwhConfig {
 
 		//events + lookups need an API secret or service acct
 		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret || !this.mixpanel.service_acct)) throw 'missing API secret or service acct';
-
-	}
-
-	//todo test runs should modify the SQL query, but they shouldn't fail
-	testRun(isTest) {
-
+		return true
 	}
 
 }

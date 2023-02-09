@@ -41,64 +41,62 @@ export default async function bigquery(config, outStream) {
 		jobTimeoutMs: 1000 * 60 * 60 * 60 // ! todo: think about this
 	};
 
-	// run the query as a job; get temp table's metadata and schema
+	// run the query as a job
 	emitter.emit('dwh query start', config);
 	const [job, jobMeta] = await bigquery.createQueryJob(options);
 	const { datasetId, tableId } = jobMeta.configuration.query.destinationTable;
-	const [tableMeta] = await bigquery.dataset(datasetId).table(tableId).get();
-	const { schema, ...tempTable } = tableMeta.metadata;
 
+	return new Promise((resolve, reject) => {
+		job.on('complete', async function (metadata) {
+			config.store({ job: metadata });
+			emitter.emit('dwh query end', config);
 
-	// store metadata and calc time transforms needed
-	config.store({ job: jobMeta });
-	config.store({ schema: schema.fields });
-	config.store({ table: tempTable });
+			// get temp table's metadata and schema + store it
+			const [tableMeta] = await bigquery.dataset(datasetId).table(tableId).get();
+			const { schema, ...tempTable } = tableMeta.metadata;
+			config.store({ schema: schema.fields });
+			config.store({ table: tempTable });
 
-	//model time transforms
-	const dateFields = schema.fields.filter(f => ['DATETIME', 'DATE', 'TIMESTAMP', 'TIME'].includes(f.type));
-	if (config.type === "event") {
-		//events get unix epoch
-		config.timeTransform = (time) => { return dayjs(time.value).valueOf(); };
-	}
-	else {
-		//all others get ISO
-		config.timeTransform = (time) => { return dayjs(time.value).format('YYYY-MM-DDTHH:mm:ss'); };
-	}
+			//model time transforms
+			const dateFields = schema.fields.filter(f => ['DATETIME', 'DATE', 'TIMESTAMP', 'TIME'].includes(f.type));
+			if (config.type === "event") {
+				//events get unix epoch
+				config.timeTransform = (time) => { return dayjs(time.value).valueOf(); };
+			}
+			else {
+				//all others get ISO
+				config.timeTransform = (time) => { return dayjs(time.value).format('YYYY-MM-DDTHH:mm:ss'); };
+			}
 
-	const mpModel = transformer(config, dateFields);
+			const mpModel = transformer(config, dateFields);
 
-	// tables cannot be streamed...they are returned as a CSV
-	if (config.type === 'table') {
-		emitter.emit('dwh query end', config);
-		const [rows] = await bigquery.dataset(datasetId).table(tableId).getRows();
-		const transformedRows = rows.map(mpModel);
-		const csv = csvMaker(transformedRows);
-		return csv;
-	}
-
-	else {
-		return new Promise((resolve, reject) => {
-			job.on('complete', function (metadata) {
-				config.store({ job: metadata });
+			// tables cannot be streamed...they are returned as a CSV
+			if (config.type === 'table') {
 				emitter.emit('dwh query end', config);
-
-				// stream results
-				emitter.emit('dwh stream start', config);
-				job
-					.getQueryResultsStream()
-					.on("error", reject)
-					.on("data", (row) => {
-						config.got();
-						outStream.push(mpModel(row));
-					})
-					.on("end", () => {
-						emitter.emit('dwh stream end', config);
-						outStream.push(null);
-						resolve(config);
-					});
-			});
+				const [rows] = await bigquery.dataset(datasetId).table(tableId).getRows();
+				const transformedRows = rows.map(mpModel);
+				const csv = csvMaker(transformedRows);
+				resolve(csv);
+			}
 
 
+			// stream results
+			emitter.emit('dwh stream start', config);
+			job
+				.getQueryResultsStream()
+				.on("error", reject)
+				.on("data", (row) => {
+					config.got();
+					outStream.push(mpModel(row));
+				})
+				.on("end", () => {
+					emitter.emit('dwh stream end', config);
+					outStream.push(null);
+					resolve(config);
+				});
 		});
-	}
+
+
+	});
+
 }

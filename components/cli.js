@@ -1,4 +1,5 @@
 import env from './env.js';
+import Config from "./config.js";
 import inquirer from 'inquirer';
 import sqlParse from 'node-sql-parser';
 import u from 'ak-tools';
@@ -6,30 +7,48 @@ import box from 'cli-box';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 
+
 export default async function cli() {
-	//todo check for presence of config file and then skip all this noise!
-	
+	// * CHECK FOR A PASSED-IN CONFIG
+	const { configIsValid, userSuppliedConfig } = await checkForCliConfig(process.argv.slice().pop());
+	if (configIsValid) {
+		if (userSuppliedConfig?.options.verbose) console.log(shortWelcome);
+		return {
+			params: userSuppliedConfig,
+			run: true
+		};
+	}
+
+	// * ENV VARS
 	const envVars = env();
 
-
+	// * WALKTHOUGH
 	const ask = inquirer.createPromptModule();
 	console.log(welcome);
 
+	// * DWH Q's
 	const dwh = (await ask(dwhType())).name;
 
 	console.log(logo(`${dwh} setup`));
 	const auth = await ask(dwhAuth(dwh, envVars));
-	const sql = (await ask(inputSQL(dwh))).sql;
+	let sql = (await ask(inputSQL(dwh))).sql;
 
+	//* MIXPANEL Q'S
 	console.log(logo(`mixpanel setup`));
 	const mpOne = await ask(mixpanelFirst(envVars));
 	const mpTwo = await ask(mixpanelSecond(envVars, mpOne));
 	const mixpanel = { ...mpOne, ...mpTwo };
 
+	// * OPTION Q'S
 	console.log(logo(`mappings + options`));
 	const mappings = await ask(getMappings(dwh, mixpanel));
 	const options = await ask(getOptions(dwh, mixpanel));
 
+	// * SMALL FIXINS
+	if (options.test) sql += `LIMIT 1000`;
+	if (!mappings.insert_id_col) options.strict = false;
+
+	// * SAVE CONFIG
 	const config = {
 		dwh,
 		auth,
@@ -38,7 +57,6 @@ export default async function cli() {
 		options,
 		mixpanel
 	};
-
 	const fileName = resolve(`./${dwh}-mixpanel.json`);
 
 	writeFileSync(
@@ -50,9 +68,8 @@ export default async function cli() {
 	console.log(`\nAWESOME! nice work! thanks for doing all that!\n
 i have saved your configuration file to:\n\n\t${fileName}\n\nyou can reuse it later!\n\n`);
 
+	// * CONFIRM RUN
 	const shouldContinue = (await ask(confirmETL(config))).run;
-
-
 
 	return {
 		params: config,
@@ -531,6 +548,14 @@ function getOptions(dwh, mixpanel) {
 	 */
 	const alwaysAsk = [
 		{
+			message: "how many concurrent workers do you want?\t(more is faster, but too many can cause crashes)",
+			name: "workers",
+			type: "input",
+			suffix: '\n',
+			default: 20,
+			validate: isNumber
+		},
+		{
 			message: "do you want to generate logs?",
 			name: "shouldLog",
 			type: "list",
@@ -541,7 +566,7 @@ function getOptions(dwh, mixpanel) {
 			]
 		},
 		{
-			message: "is this a test run?",
+			message: "is this a test run?\t\t(note this will add a 'LIMIT 1000' to your query)",
 			name: "test",
 			type: "list",
 			suffix: '\n',
@@ -624,6 +649,40 @@ does that look right? do you want to proceed with the rETL?
 --------
 */
 
+async function checkForCliConfig(maybeJson) {
+	let configExits = false;
+	let configIsValid = false;
+	let userSuppliedConfig = {};
+
+	let file = null;
+
+	try {
+		file = await u.load(maybeJson, true, undefined, false);
+		configExits = true;
+	}
+
+	catch (e) {
+		configExits = false;
+		configIsValid = false;
+	}
+
+	try {
+		Config.validate.bind(file);
+		configIsValid = true;
+	}
+	catch (e) {
+		configIsValid = false;
+	}
+
+	userSuppliedConfig = file;
+
+	return {
+		configIsValid,
+		configExits,
+		userSuppliedConfig
+	};
+}
+
 function passesNotEmpty(str) {
 	if (!str) return "your answer can't be empty...";
 	return true;
@@ -681,10 +740,11 @@ o-o   o       o o  o         o       o   o o-O-o o   o o--o    O  o   o o--o o
 o-o     o   o   o  o         o       o   o o-O-o o   o o     o   oo   o o--o O---o                                                                                                                                                                    
 `;
 
-const banner = `\n\tmove data from your data warehouse... to mixpanel!\n\tby AK (v${process.env.npm_package_version || 1})\n\thttps://github.com/ak--47/dwh-mixpanel\n\n`;
-const note = `i need to ask you a few questions to help you build a configuration file!\n\nyou will want to be logged into your data warehouse + your mixpanel account\n\nnote: once finished with this walkthrough, you will be able to re-use this configuration file with:\n\tnpx dwh-mixpanel ./path-to-config.json\n\n`;
+const banner = `\n\tmove data from your warehouse... to mixpanel!\n\tby AK (v${process.env.npm_package_version || 1})\n\thttps://github.com/ak--47/dwh-mixpanel\n\n`;
+const note = `this tutorial will ask you a few questions to help you build a configuration file!\n\nyou will want to be logged into your data warehouse + your mixpanel account\n\nnote: once finished with this walkthrough, you will be able to re-use this configuration file with:\n\tnpx dwh-mixpanel ./path-to-config.json\n\n`;
 
 const welcome = hero.concat(banner).concat(note);
+const shortWelcome = hero.concat(banner);
 
 // function logo(name) {
 // 	return `

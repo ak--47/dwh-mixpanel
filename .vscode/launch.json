@@ -1,7 +1,7 @@
 {
 	"configurations": [
 		{
-			"command": "npm run scratch",
+			"command": "npm run dev",
 			"name": "DEV",
 			"request": "launch",
 			"type": "node-terminal",

@@ -9,6 +9,9 @@ export default function createStream(config, cb = () => { }) {
 		objectMode: true,
 	});
 
+	//tables cannot be streamed!
+	if (config.type === 'table') return inStream;
+
 	const outStream = mp.createMpStream(config.mpAuth(), config.mpOpts(), (err, results) => {
 		if (err) {
 			if (config.verbose) u.cLog(err, 'pipeline fail', 'ERROR');
