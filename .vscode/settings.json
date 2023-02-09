@@ -7,6 +7,7 @@
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"typescript.implementationsCodeLens.enabled": true,
 	"cSpell.words": [
+		"biquery",
 		"DATETIME",
 		"DDTHH",
 		"FIXINS",

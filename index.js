@@ -35,6 +35,7 @@ import env from './components/env.js';
 import u from 'ak-tools';
 import mp from 'mixpanel-import';
 import { pEvent } from 'p-event';
+import { resolve } from 'path';
 import _ from "lodash";
 
 // eslint-disable-next-line no-unused-vars
@@ -45,6 +46,15 @@ import * as Types from "./types/types.js";
 PIPELINE
 --------
 */
+
+/**
+ * stream a SQL query from your data warehouse into mixpanel!
+ * @example
+ * const results = await dwhMixpanel(params)
+ * console.log(results.mixpanel) // { duration: 3461, success: 420, responses: [], errors: [] }
+ * @param {Types.Params} params your streaming configuration
+ * @returns {Types.Summary} summary of the job containing metadata about time/throughput/responses
+ */
 async function main(params = {}) {
 	// * ENV VARS
 	const envVars = env();
@@ -52,14 +62,20 @@ async function main(params = {}) {
 	// * CONFIG
 	const config = new Config(
 		_.merge(
-			u.clone(params),
+			u.clone(params), //params take precedence over env
 			u.clone(envVars)
 		)
 	);
-
-	config.etlTime.start();
+	
 	if (config.verbose) u.cLog('\nSTART!');
-	config.validate();
+	try {
+		config.validate();
+	}
+	catch (e) {
+		console.error(`configuration is invalid! reason:\n\n\t${e}\n\nquitting...\n\n`);		
+		process.exit(0)
+	}
+	config.etlTime.start();
 
 
 	//* MIXPANEL STREAM
@@ -88,7 +104,6 @@ async function main(params = {}) {
 	catch (e) {
 		if (config.verbose) u.cLog(e, `${config.warehouse} error: ${e.message}`, `CRITICAL`);
 		mpStream.destroy();
-		// debugger;
 		throw e;
 	}
 
@@ -113,8 +128,21 @@ async function main(params = {}) {
 
 
 	// * LOGS + CLEANUP
-	// todo
 	const result = config.summary();
+	if (config.options.logFile) {
+		try {
+			const fileName = resolve(config.options.logFile);
+			const logFile = await u.touch(fileName, result, true, false, true);
+			u.cLog(`logs written to ${logFile}`);
+		}
+		catch (e) {
+			if (config.verbose) {
+				u.cLog('failed to write logs');
+			}
+
+		}
+	}
+
 	return result;
 }
 
@@ -183,7 +211,7 @@ EXPORTS
 
 export default main;
 
-//this allows the module to function as a standalone script
+//this fires when the module is run as a standalone script
 if (esMain(import.meta)) {
 	cli().then(answers => {
 		const { params, run } = answers;
@@ -197,15 +225,15 @@ if (esMain(import.meta)) {
 			process.exit(0);
 		}
 	}).then((result) => {
-		//todo if you want to do anything at all
-		debugger;		
+		//noop
+
 	}).catch((e) => {
-		u.cLog(`\nuh oh! something didn't work...\nthe error message is:\n\n\t${e.message}\n\n`)
-		u.cLog(`take a closer look at your config file and try again (it's usually credentials!)\n`)
-		u.cLog(`if you continue to be stuck, file an issue:\nhttps://github.com/ak--47/dwh-mixpanel/issues\n\n`)
+		u.cLog(`\nuh oh! something didn't work...\nthe error message is:\n\n\t${e.message}\n\n`);
+		u.cLog(`take a closer look at your config file and try again (it's usually credentials!)\n`);
+		u.cLog(`if you continue to be stuck, file an issue:\nhttps://github.com/ak--47/dwh-mixpanel/issues\n\n`);
 		process.exit(1);
-	}).finally(()=>{
-		u.cLog('\n\nhave a great day!\n\n')
+	}).finally(() => {
+		u.cLog('\n\nhave a great day!\n\n');
 		process.exit(0);
 	});
 
