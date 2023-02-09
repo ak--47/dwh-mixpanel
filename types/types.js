@@ -5,11 +5,11 @@ JSDOC TYPINGS
 */
 
 /**
- * @typedef {'biquery' | 'athena' | 'snowflake'}  SupportedWarehouses
+ * @typedef {'biquery' | 'athena' | 'snowflake'}  SupportedWarehouses the data warehouses supported by this module
  */
 
 /**
- * @typedef {'event' | 'user' | 'group' | 'table'}  SupportedRecords
+ * @typedef {'event' | 'user' | 'group' | 'table'}  SupportedRecords types of records that can be ingested by mixpanel
  */
 
 /**
@@ -65,7 +65,7 @@ JSDOC TYPINGS
  */
 
 /**
- * @typedef {(Object.<string, string>)} Tags arbitrary tags (k:v) to put on the data
+ * @typedef {Object.<string, string>} Tags arbitrary tags (k:v) to put on the data
  */
 
 
