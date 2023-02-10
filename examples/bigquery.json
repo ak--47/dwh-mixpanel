@@ -14,7 +14,6 @@
         "insert_id_col": "qux"
     },
     "options": {
-        "test": false,
         "logFile": "./tmp/log.txt",
 		"strict": true,
 		"compress": false,

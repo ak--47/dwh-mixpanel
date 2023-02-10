@@ -1,0 +1,33 @@
+{
+	"dwh": "athena",
+	"auth": {
+		"accessKeyId": "",
+		"secretAccessKey": "",
+		"region": "us-east-2"
+    },
+	"sql": "SELECT * FROM \"dwh-tests\".\"events\" limit 10000",
+	"mappings": {
+		"event_name_col": "event",
+		"distinct_id_col": "uuid",
+		"time_col": "time",
+		"insert_id_col": "insert_id"
+	},
+	"options": {
+		"logFile": "./tmp/log.txt",
+		"strict": true,
+		"compress": false,
+		"verbose": true
+	},
+	"mixpanel": {
+		"project_id": "",
+		"service_account": "",
+		"service_secret": "",
+		"api_secret": "",
+		"token": "",
+		"region": "US",
+		"type": "event"
+	},
+	"tags": {
+		"dwh": "athena"		
+	}
+}

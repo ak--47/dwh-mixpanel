@@ -667,8 +667,7 @@ async function checkForCliConfig(maybeJson) {
 	}
 
 	try {
-		Config.validate.bind(file);
-		configIsValid = true;
+		configIsValid = Config.prototype.validate.bind(file)();
 	}
 	catch (e) {
 		configIsValid = false;
