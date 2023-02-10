@@ -133,7 +133,7 @@ export default class dwhConfig {
 	mpAuth() {
 		const mp = this.mixpanel;
 		return {
-			acct: mp.service_acct,
+			acct: mp.service_account,
 			pass: mp.service_secret,
 			project: mp.project_id,
 			token: mp.token,
@@ -213,7 +213,7 @@ export default class dwhConfig {
 		if (this.type === 'group' && !this.mixpanel.groupKey) throw 'missing group key';
 
 		//events + lookups need an API secret or service acct
-		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret || !this.mixpanel.service_acct)) throw 'missing API secret or service acct';
+		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret || !this.mixpanel.service_account)) throw 'missing API secret or service account';
 		return true
 	}
 

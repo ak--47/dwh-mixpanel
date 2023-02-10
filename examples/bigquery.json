@@ -22,7 +22,7 @@
     },
     "mixpanel": {
         "project_id": "",
-        "service_acct": "",
+        "service_account": "",
         "service_secret": "",
 		"api_secret": "",
 		"token": "",

@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 export default function gatherCliParams() {
 	dotenv.config({ override: true });
 	const { MP_API_SECRET,
-		MP_SERVICE_ACCT,
+		MP_SERVICE_ACCOUNT,
 		MP_SERVICE_SECRET,
 		MP_TOKEN,
 		MP_PROJECT,
@@ -15,7 +15,7 @@ export default function gatherCliParams() {
 	};
 
 	if (MP_API_SECRET) valuesFound.mixpanel.api_secret = MP_API_SECRET;
-	if (MP_SERVICE_ACCT) valuesFound.mixpanel.service_acct = MP_SERVICE_ACCT;
+	if (MP_SERVICE_ACCOUNT) valuesFound.mixpanel.service_account = MP_SERVICE_ACCOUNT;
 	if (MP_SERVICE_SECRET) valuesFound.mixpanel.service_secret = MP_SERVICE_SECRET;
 	if (MP_TOKEN) valuesFound.mixpanel.token = MP_TOKEN;
 	if (MP_PROJECT) valuesFound.mixpanel.project_id = MP_PROJECT;

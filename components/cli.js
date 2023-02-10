@@ -45,7 +45,7 @@ export default async function cli() {
 	const options = await ask(getOptions(dwh, mixpanel));
 
 	// * SMALL FIXINS
-	if (options.test) sql += `LIMIT 1000`;
+	if (options.test) sql += ` LIMIT 1000`;
 	if (!mappings.insert_id_col) options.strict = false;
 
 	// * SAVE CONFIG
@@ -338,7 +338,7 @@ function mixpanelSecond(env, answers) {
 			name: "service_account",
 			type: "input",
 			suffix: '\n',
-			default: env?.mixpanel?.service_acct,
+			default: env?.mixpanel?.service_account,
 			validate: passesNotEmpty
 		},
 		{

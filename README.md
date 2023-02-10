@@ -9,7 +9,7 @@ Supported Data Warehouses:
 - [AWS Athena](#athena)
 - [Snowflake](#snowflake)
 
-## 👔 tldr;
+## 👔 tldr; <div id="tldr"></div>
 run the module, and provide a [configuration file](#config) as the first argument:
 ```bash
 npx dwh-mixpanel ./myConfig.json
@@ -20,11 +20,62 @@ for help building a [configuration file](#config), run the module with no argume
 npx dwh-mixpanel ./myConfig.json
 ```
 
+if you will use this module frequently, consider a global install:
+
+```
+npm install --global dwh-mixpanel 
+```
+
+and then you don't need the `npx`:
+```
+dwh-mixpanel ./myConfig.json
+```
+
 ## 🍿 demo
 
-### 👨‍💻️ cli
+todo
 
-### 🔄 module
+### 👨‍💻️ cli <div id="cli"></div>
+
+as stated in the [tldr](#tldr), if you run `dwh-mixpanel` with no arguments you get a CLI which helps you build a [configuration file](#config):
+```bash
+npx dwh-mixpanel
+```
+yields: 
+
+<img src="https://aktunes.neocities.org/dwh-mixpanel/cliWalk-sm.gif" alt="cli walkthrough">
+
+at the end of this walkthrough, a JSON file will be saved to your current working directory. once you have a configuration file, you can run it using passing that file in as the first argument:
+
+```bash
+npx dwh-mixpanel snowflake-mixpanel.json
+```
+you'll get some console output as to the status of your job, and once it's complete it will stash the logs in the current working directory.
+
+### 🔄 module <div id="module"></div>
+
+`dwh-mixpanel` can also be used as a ESM module inside any node.js environment.
+
+you use it as any other dependency:
+```javascript
+import dwhMp from 'dwh-mixpanel'
+```
+
+it exports a single function, which takes in a single parameter - a [configuration object](#config). 
+
+this is the entry-point for the whole module:
+
+```javascript
+const myConfig = {
+	dwh: "athena",
+	sql: "SELECT * FROM EVENTS",
+	//etc...
+}
+
+const athenaToMp = await dwhMp(myConfig)
+```
+
+the module returns a `summary` of the import job, with statistics and logs about how many records were processed.
 
 ### configuration<div id="config"></div>
 your configuration is an object (or JSON) with the following structure:
