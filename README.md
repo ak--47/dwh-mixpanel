@@ -137,7 +137,7 @@ to read more about the ways you can authenticate with a supported data warehouse
 
 ##### sql
 
-a valid SQL Query to run (as a job) in your data warehouse; this query will usally be in the form of a `SELECT {fields}` or `SELECT *` statement:
+a valid SQL Query to run (as a job) in your data warehouse; this query will usually be in the form of a `SELECT {fields}` or `SELECT *` statement:
 
 ```SQL
 SELECT 
@@ -160,7 +160,7 @@ your SQL query should produce a **flat, non-nested table that has the fields and
 ##### mappings
 an object `{}` containing a map of columns headers to mixpanel property keys.
 
-providing mappings is not a tedious task; mixpanel is a schemaless tool for semi-structred data, so any column not explicitly mapped which is present in the table will become an event/user property key and value.
+providing mappings is not a tedious task; mixpanel is a schemaless tool for semi-structured data, so any column not explicitly mapped which is present in the table will become an event/user property key and value.
 
 the fields you will provide mappings for depend on the type of data you're importing:
 
@@ -206,7 +206,7 @@ the fields you will provide mappings for depend on the type of data you're impor
 }
 ```
 
-the key to remeber about `mappings` is that you a giving the module a guide to understand how to map fields from your warehouse to required fields for the different mixpanel data types.
+the key to remember about `mappings` is that you a giving the module a guide to understand how to map fields from your warehouse to required fields for the different mixpanel data types.
 
 ##### mixpanel
 an object `{}` containing authentication details used to connect to your mixpanel project.
