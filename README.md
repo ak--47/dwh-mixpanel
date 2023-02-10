@@ -22,17 +22,6 @@ for help building a [configuration file](#config), run the module with no argume
 npx dwh-mixpanel ./myConfig.json
 ```
 
-if you will use this module frequently, consider a global install:
-
-```
-npm install --global dwh-mixpanel 
-```
-
-and then you don't need the `npx`:
-```
-dwh-mixpanel ./myConfig.json
-```
-
 **what next?**
 - check out the [demo](#demo) 
 - learn about using the [cli](#cli)
@@ -67,7 +56,18 @@ as it runs, you'll get some console output as to the status of your job:
 
 <img src="https://aktunes.neocities.org/dwh-mixpanel/demo.gif" alt="demo" />
 
-once it's complete, it will stash logs in the current working directory.
+once it's complete, it will stash logs in the current working directory, and you can see your data in mixpanel!
+
+**note:** if you will use this module frequently, consider a global install:
+
+```
+npm install --global dwh-mixpanel 
+```
+
+and then you don't need the `npx`:
+```
+dwh-mixpanel ./myConfig.json
+```
 
 <div id="module"></div>
 
@@ -101,6 +101,38 @@ const athenaToMp = await dwhMp(myConfig)
 
 the module returns a `summary` of the unload/load job, with statistics and logs about how many records were processed, throughput, and metadata from the warehouse.
 
+```javascript
+{
+  mixpanel: {
+    success: 100000,
+    failed: 0,
+    total: 100000,
+    requests: 50,
+    recordType: "event",
+    duration: 15314,
+    human: "15.314 seconds",
+    retries: 0,
+    version: "2.2.287",
+    workers: 10,
+    eps: 6529,
+    rps: 3.265,
+    responses: [],
+    errors: [],
+  },
+  bigquery: {
+    job: {
+      //job infos
+    },
+    metadata: {
+      //query metadata
+    },
+    schema: {
+      //schema
+    }    
+  }
+}
+```
+
 <div id="config"></div>
 
 ### configuration
@@ -117,7 +149,7 @@ your configuration is an object (or JSON) with the following structure:
 }
 ```
 
-you can find [examples](https://github.com/ak--47/dwh-mixpanel) in the repo for different warehouses. additionally, the module is typed using jsdoc, so you should have a good experience using it in code:
+you can find [examples](https://github.com/ak--47/dwh-mixpanel) in the repo for different warehouses. additionally, the module is typed using jsdoc, so you should have a good experience using it in your IDE:
 
 <img src="https://aktunes.neocities.org/dwh-mixpanel/devxp.gif" alt="developer experience" />
 
@@ -160,9 +192,9 @@ your SQL query should produce a **flat, non-nested table that has the fields and
 ##### mappings
 an object `{}` containing a map of columns headers to mixpanel property keys.
 
-providing mappings is not a tedious task; mixpanel is a schemaless tool for semi-structured data, so any column not explicitly mapped which is present in the table will become an event/user property key and value.
+providing mappings is not a tedious task; mixpanel is a schemaless tool designed for semi-structured data, so **any column not explicitly mapped which is present in the table will become an event/user property key and value**.
 
-the fields you will provide mappings for depend on the type of data you're importing:
+the fields you must provide mappings for depend on the type of data you're importing:
 
 **events** mappings
 
@@ -176,6 +208,7 @@ the fields you will provide mappings for depend on the type of data you're impor
   'insert_id_col': '' 		// column for row id (deduplication)
 }
 ```
+note: `insert_id_col` is **required** when using `strict` mode
 
 **user or group profiles** mappings
 
@@ -234,9 +267,10 @@ an object `{}` containing authentication details used to connect to your mixpane
 	lookupTableId: ''			//the lookup table to replace	
 }
 ```
+note: you can find most of these values in the **[your mixpanel project's settings](https://help.mixpanel.com/hc/en-us/articles/115004490503-Project-Settings)**
 
 ##### options
-an object `{}` containing various options for the job. the `workers` option is important because it governs concurrency, which can greatly affect throughput.
+an object `{}` containing various options for the job. 
 
 ```javascript
 {
@@ -247,18 +281,33 @@ an object `{}` containing various options for the job. the `workers` option is i
  	workers: 20 // number of concurrent workers to make requests to mixpanel
 }
 ```
+the `workers` option is important because it governs concurrency, which can greatly affect throughput.
 
 ##### tags (optional)
-an object `{}` containing arbitrary key:value string pairs that will be used to tag the data. this is particularly useful if this module is being used as part of an automated pipeline, and you wish to tag the data with `runIds`.
+an object `{}` containing arbitrary `key:value` string pairs that will be used to tag the data. this is particularly useful if this module is being used as part of an automated pipeline, and you wish to tag the data with `runIds` or some other reference value.
 
 ```javascript
 {
 	mixpanel: {
 		type: "event"
-	}
+	},	
 	tags: {
 		"foo": "bar" 
 		// every event in mixpanel will have a {foo: 'bar'} prop
+	}
+}
+```
+
+this works on all record types:
+
+```javascript
+{
+	mixpanel: {
+		type: "user"
+	},	
+	tags: {
+		"baz": "qux" 
+		// every user profile updated will have a {baz: 'qux'} prop
 	}
 }
 ```
@@ -267,22 +316,73 @@ an object `{}` containing arbitrary key:value string pairs that will be used to 
 
 ### warehouse details
 
-the data warehouse connectors used by this module are implemented as "middleware", and therefore they have different authentication strategies an dependencies.
+the data warehouse connectors used by this module are implemented as "middleware", and therefore they have different authentication strategies and dependencies.
 
-below, i detail the most commonly used authentication methods for each supported warehouse, but there are probably cases which are not covered. if you find an auth method that you need is not supported for a particular warehouse, [please file an issue](https://github.com/ak--47/dwh-mixpanel/issues)
+in most cases, `dwh-mixpanel` wraps the vendor SDKs in it's own API, so when passing `auth` params in your configuration, you can use anything values that are supported by your warehouse, provided those credentials have the appropriate permissions.
+
+below, i detail the most commonly used authentication methods for each supported warehouse, along with the permission required to run a successful job. if you find an auth method or strategy that you need and is not supported for your warehouse, [please file an issue](https://github.com/ak--47/dwh-mixpanel/issues)
 
 <div id="bq"></div>
 
 ##### BigQuery 
-todo
+most bigquery jobs will be authenticated with GCP [service accounts](https://cloud.google.com/iam/docs/service-accounts)
+
+the service account will need the following permissions in bigquery AND on the specific dataset being queried:
+- [`bigquery.jobs.create`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=Run%20jobs%20(including%20queries)%20within%20the%20project.)
+- [`bigquery.jobs.get`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=Get%20data%20and%20metadata%20on%20any%20job.1)
+- [`bigquery.datasets.get`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=Get%20metadata%20about%20a%20dataset.)
+- [`bigquery.tables.get	`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=out%20of%20BigQuery.-,bigquery.tables.get,-Get%20table%20metadata)
+- [`bigquery.tables.getData`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=Get%20table%20data.%20This%20permission%20is%20required%20for%20querying%20table%20data.%0ATo%20get%20table%20metadata%2C%20you%20need%20bigquery.tables.get.)
+
+in my experience, the `data editor` role set satisfies these cases; if a required permission is missing, the output will tell you what it is.
+
+these typical fields used for auth are `project_id`, `private_key`, and `client_email`; `location` will need to be added manually based on the [region of your bigquery instance](https://cloud.google.com/bigquery/docs/locations):
+```javascript
+dwh: "bigquery",
+auth : {
+		"project_id": "my-gcp-project", //GCP project
+		"client_email": "serviceAccount@email.com", //service acct email
+		"private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",	// service account private key
+		"location": "US" //bigquery location.. this is required!
+	}
+```
+
+in most cases, you can [drop your exported JSON keys](https://cloud.google.com/iam/docs/creating-managing-service-accounts) into the `auth` param, and it will work.
+
 <div id="snowflake"></div>
 
 ##### Snowflake 
-todo
+most snowflake jobs with authenticate with a user name + password. note that 2FA is not currently supported in this module.
+
+these fields used for auth are `project_id`, `private_key`, and `client_email`; `location` will need to be added manually based on the [region of your bigquery instance](https://cloud.google.com/bigquery/docs/locations):
+```javascript
+dwh: "snowflake",
+auth : {
+        "account": "foobar.us-central1.gcp", // your snowflake identifier
+        "username": "",
+        "password": "",
+        "database": "PROD1", // database to use
+        "schema": "PUBLIC", // schema to use
+        "warehouse": "COMPUTE_WH" //warehouse to use
+    }
+```
+
+no special permissions are required for snowflake - only that the user/pass you entered can view and query the datatset.
+
 <div id="athena"></div>
 
 ##### Athena 
-todo
+
+
+
+```javascript
+dwh: "athena",
+auth : {
+		"accessKeyId": "",
+		"secretAccessKey": "",
+		"region": "us-east-2" //note this is important!
+	}
+```
 
 <div id="env"></div>
 

@@ -198,7 +198,7 @@ emitter.once('mp import end', (config) => {
 		u.cLog(`\nCOMPLETE!`);
 		u.cLog(`\nETL processed COMPLETE!`);
 		u.cLog(`\tprocessed ${u.comma(summary.mixpanel.total)} ${config.type}s in ${summary.time.human}`);
-		u.cLog(`\t(${successRate}% success rate; ~${u.comma(evPerSec)} RPS)`);
+		u.cLog(`\t(${successRate}% success rate; ~${u.comma(evPerSec)} EPS)`);
 		u.cLog(`\ncheck out your data! https://mixpanel.com/project/${config.mpAuth().project}\n`);
 	}
 });
