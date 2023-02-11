@@ -58,7 +58,10 @@ export default async function bigquery(config, outStream) {
 			config.store({ table: tempTable });
 
 			//model time transforms
-			const dateFields = schema.fields.filter(f => ['DATETIME', 'DATE', 'TIMESTAMP', 'TIME'].includes(f.type));
+			const dateFields = schema.fields
+				.filter(f => ['DATETIME', 'DATE', 'TIMESTAMP', 'TIME']
+				.includes(f.type))
+				.map(f => f.name);
 			if (config.type === "event") {
 				//events get unix epoch
 				config.timeTransform = (time) => { return dayjs(time.value).valueOf(); };

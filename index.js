@@ -33,6 +33,7 @@ import emitter from './components/emitter.js';
 import Config from "./components/config.js";
 import env from './components/env.js';
 import u from 'ak-tools';
+
 import mp from 'mixpanel-import';
 import { pEvent } from 'p-event';
 import { resolve } from 'path';
@@ -56,6 +57,11 @@ PIPELINE
  * @returns {Types.Summary} summary of the job containing metadata about time/throughput/responses
  */
 async function main(params = {}) {
+	// * TRACKING
+	const track = u.tracker('dwh-mixpanel');
+	const runId = u.uid();
+	track('start', { runId });
+
 	// * ENV VARS
 	const envVars = env();
 
@@ -66,14 +72,22 @@ async function main(params = {}) {
 			u.clone(envVars)
 		)
 	);
-	
+
 	if (config.verbose) u.cLog('\nSTART!');
+
+	const { type, version, warehouse } = config;
+	const props = { runId, type, version, warehouse };
 	try {
 		config.validate();
+		props.type = config.type;
+		props.warehouse = config.warehouse;
+		props.version = config.version;
+		track('valid', props);
 	}
 	catch (e) {
-		console.error(`configuration is invalid! reason:\n\n\t${e}\n\nquitting...\n\n`);		
-		process.exit(0)
+		track('invalid config', { ...props, reason: e });
+		console.error(`configuration is invalid! reason:\n\n\t${e}\n\nquitting...\n\n`);
+		process.exit(0);
 	}
 	config.etlTime.start();
 
@@ -97,11 +111,13 @@ async function main(params = {}) {
 			default:
 				if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);
 				mpStream.destroy();
+				track('unsupported warehouse', props)
 				throw new Error('unsupported warehouse', { cause: config.warehouse, config });
 		}
 	}
 
 	catch (e) {
+		track('warehouse error', { ...props, msg: e.message });
 		if (config.verbose) u.cLog(e, `${config.warehouse} error: ${e.message}`, `CRITICAL`);
 		mpStream.destroy();
 		throw e;
@@ -120,6 +136,7 @@ async function main(params = {}) {
 		// * WAIT
 		try {
 			await pEvent(emitter, 'mp import end');
+			mpStream.destroy();
 		} catch (e) {
 			u.cLog(e, 'UNKNOWN FAILURE', 'CRITICAL');
 			throw e;
@@ -142,7 +159,7 @@ async function main(params = {}) {
 
 		}
 	}
-
+	track('end', props);
 	return result;
 }
 

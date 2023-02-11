@@ -61,7 +61,7 @@ export default async function athena(config, outStream) {
 	const execId = meta.QueryExecutionId;
 	config.store({ executionId: execId, metadata: meta.$metadata });
 	const exec = new GetQueryExecutionCommand({ QueryExecutionId: execId });
-	
+
 	// athena queues everything, so we poll until the query is complete
 	let queryFinished;
 	do {
@@ -73,7 +73,7 @@ export default async function athena(config, outStream) {
 	);
 
 	emitter.emit('dwh query end', config);
-	
+
 	// * S3
 	const s3URI = queryFinished.QueryExecution.ResultConfiguration.OutputLocation.replace("s3://", "").split("/");
 	const s3Location = { bucket: s3URI[0], key: s3URI.slice(1).join("/") };
@@ -90,7 +90,14 @@ export default async function athena(config, outStream) {
 
 
 	// * MODELING
-	config.timeTransform = (row) => { return dayjs(row).valueOf(); };
+	if (config.type === "event") {
+		config.timeTransform = (time) => { return dayjs(time).valueOf(); };
+	}
+
+	else {
+		config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
+	}
+
 	let dateFields;
 	if (schema) {
 		dateFields = schema
@@ -106,7 +113,7 @@ export default async function athena(config, outStream) {
 	if (config.type === 'table') {
 		// tables cannot be streamed...they are returned as a CSV
 		emitter.emit('dwh stream start', config);
-		
+
 		const getCSV = new GetObjectCommand({
 			Bucket: s3Location.bucket,
 			Key: s3Location.key
@@ -127,9 +134,9 @@ export default async function athena(config, outStream) {
 		});
 		const deleteFiles = await s3.send(cmd);
 		config.store({ deleteS3: deleteFiles });
-		
+
 		emitter.emit('dwh stream end', config);
-		
+
 		return csv.trim();
 	}
 

@@ -7,6 +7,7 @@ export default function createStream(config, cb = () => { }) {
 	let reqCount = 0;
 	const inStream = new Stream.PassThrough({
 		objectMode: true,
+		highWaterMark: config.options.workers * 10000
 	});
 
 	//tables cannot be streamed!
@@ -15,7 +16,7 @@ export default function createStream(config, cb = () => { }) {
 	const outStream = mp.createMpStream(config.mpAuth(), config.mpOpts(), (err, results) => {
 		if (err) {
 			if (config.verbose) u.cLog(err, 'pipeline fail', 'ERROR');
-			debugger;
+			//debugger;
 			throw err;
 		}
 		else {

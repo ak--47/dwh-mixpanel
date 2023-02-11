@@ -45,7 +45,7 @@ export default async function snowflake(config, outStream) {
 
 
 	// * MODELING
-	config.timeTransform = (row) => { return row.getTime(); };
+	config.timeTransform = (time) => { return time.getTime(); };
 	let dateFields;
 	if (schema) {
 		dateFields = schema

@@ -1,6 +1,6 @@
 import u from "ak-tools";
 
-export default function modelUsers(row, mappings, token, timeFields, timeTransform, tags) {
+export default function modelUsers(row, mappings, token, timeFields = [], timeTransform, tags) {
 	let {
 		distinct_id_col,
 		name_col,
@@ -22,6 +22,17 @@ export default function modelUsers(row, mappings, token, timeFields, timeTransfo
 		$ignore_time: true,
 		[profileOperation]: {}
 	};
+
+	// time transforms
+	try {
+		for (const timeField of timeFields) {
+			row[timeField] = timeTransform(row[timeField]);
+		}
+	}
+
+	catch(e) {
+		//noop
+	}
 
 	delete row[distinct_id_col];
 
@@ -47,7 +58,7 @@ export default function modelUsers(row, mappings, token, timeFields, timeTransfo
 	}
 
 	if (created_col) {
-		modeledProfile[profileOperation].$created = timeTransform(row[created_col]);
+		modeledProfile[profileOperation].$created = row[created_col];
 		delete row[created_col];
 	}
 

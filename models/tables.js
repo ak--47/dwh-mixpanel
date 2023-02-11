@@ -1,11 +1,22 @@
 import u from "ak-tools";
 
-export default function modelTable(row, mappings, lookupTableId, timeFields, timeTransform, tags) {
+export default function modelTable(row, mappings, lookupTableId, timeFields = [], timeTransform, tags) {
 	const { lookup_col } = mappings;
 
 	if (!row[lookup_col]) {
 		u.cLog(`lookup table row is missing lookup key: ${lookup_col}`)
 		u.cLog(row)		
+	}
+
+	// time transforms
+	try {
+		for (const timeField of timeFields) {
+			row[timeField] = timeTransform(row[timeField]);
+		}
+	}
+
+	catch(e) {
+		//noop
 	}
 
 	const modeledRow = row;

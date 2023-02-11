@@ -1,5 +1,7 @@
 import * as u from 'ak-tools';
 import dayjs from 'dayjs';
+import { createRequire } from "node:module"
+const require = createRequire(import.meta.url)
 // eslint-disable-next-line no-unused-vars
 import * as Types from "../types/types.js";
 
@@ -22,7 +24,8 @@ const defaultOptions = {
 	strict: true,
 	compress: false,
 	verbose: true,
-	streamSize: 27
+	streamSize: 27,
+	workers: 10
 };
 
 const defaultMixpanel = {
@@ -61,6 +64,15 @@ export default class dwhConfig {
 			import: u.timer('import')
 		};
 
+		this.version = this.getVersion()
+
+	}
+
+	getVersion() {
+		const { version } = require('../package.json');
+		if (version) return version;
+		if (process.env.npm_package_version) return process.env.npm_package_version;
+		return 'unknown';
 	}
 
 	get type() {
@@ -213,7 +225,7 @@ export default class dwhConfig {
 		if (this.type === 'group' && !this.mixpanel.groupKey) throw 'missing group key';
 
 		//events + lookups need an API secret or service acct
-		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret || !this.mixpanel.service_account)) throw 'missing API secret or service account';
+		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret && !this.mixpanel.service_account)) throw 'missing API secret or service account';
 		return true
 	}
 

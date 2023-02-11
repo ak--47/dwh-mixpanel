@@ -50,7 +50,7 @@ npx dwh-mixpanel
 
 it looks like this:
 
-<img src="https://aktunes.neocities.org/dwh-mixpanel/cliWalk-sm.gif" alt="cli walkthrough"/>
+<img src="https://aktunes.neocities.org/dwh-mixpanel/cliWalk-sm.gif" alt="cli walkthrough" width=400/>
 
 at the end of this walkthrough, a JSON file will be saved to your current working directory; it will contain the details of what you typed into the CLI. the CLI will then ask you if you'd like to trigger a run.
 
@@ -62,7 +62,7 @@ npx dwh-mixpanel snowflake-mixpanel.json
 
 as it runs, you'll get some console output as to the status of your job:
 
-<img src="https://aktunes.neocities.org/dwh-mixpanel/demo.gif" alt="demo" />
+<img src="https://aktunes.neocities.org/dwh-mixpanel/demo.gif" alt="demo" width=400/>
 
 once the pipeline is complete, it will stash logs in the current working directory, and you can see your data in mixpanel!
 
@@ -164,7 +164,7 @@ your configuration is an object (or JSON) with the following structure:
 
 you can find [examples](https://github.com/ak--47/dwh-mixpanel) in the repo for different warehouses. additionally, the module is typed using jsdoc, so you should have a good experience using it in your IDE:
 
-<img src="https://aktunes.neocities.org/dwh-mixpanel/devxp.gif" alt="developer experience" />
+<img src="https://aktunes.neocities.org/dwh-mixpanel/devxp.gif" alt="developer experience" width=500/>
 
 here's a description of each of those keys (and values) mean
 
@@ -217,11 +217,11 @@ the fields you must provide mappings for depend on the type of data you're impor
 
 ```javascript
 {
-	// REQUIRED
-  'event_name_col': '' 		// column for event name
-  'distinct_id_col': '' 	// column for uniquer user id
-  'time_col': '' 			// column for event time
-	// OPTIONAL
+  // REQUIRED
+  'event_name_col': '', 		// column for event name
+  'distinct_id_col': '', 	// column for uniquer user id
+  'time_col': '', 		// column for event time
+  // OPTIONAL
   'insert_id_col': '' 		// column for row id (deduplication)
 }
 ```
@@ -233,16 +233,16 @@ note: `insert_id_col` is **required** when using `strict` mode
 ```javascript
 {
 	// REQUIRED
- 'distinct_id_col': '' // column for uniquer user id
+ 'distinct_id_col': '', // column for uniquer user id
  	// OPTIONAL
- 'profileOperation': '' // the $set style operation to use
- 'name_col': '' // column $name to use for the user/group profile
- 'email_col': '' // column $email to use for the user/group profile
- 'avatar_col': '' // column $email to use for the user/group profile
- 'created_col': '' // column $created (timestamp) to use
- 'phone_col': '' // column $phone to use for the user/group profile
- 'latitude_col': '' // column $latitude to use for the user/group profile
- 'longitude_col': '' // column $longitude to use for the user/group profile
+ 'profileOperation': '', // the $set style operation to use
+ 'name_col': '', // column $name to use for the user/group profile
+ 'email_col': '', // column $email to use for the user/group profile
+ 'avatar_col': '', // column $email to use for the user/group profile
+ 'created_col': '', // column $created (timestamp) to use
+ 'phone_col': '', // column $phone to use for the user/group profile
+ 'latitude_col': '', // column $latitude to use for the user/group profile
+ 'longitude_col': '', // column $longitude to use for the user/group profile
  'ip_co': '' // column $ip to use for the user/group profile
 }
 ```
@@ -262,7 +262,7 @@ the key to remember about `mappings` is that you a giving the module a guide to 
 here's an example:
 
 ```SQL
- SELECT
+SELECT
  	insert_id, timestamp, action, uuid, theme, class
 FROM
 	mydnd.campaign.db
@@ -278,11 +278,11 @@ which produces this table:
 
 with this mapping:
 
-```JAVASCRIPT
+```javascript
 {
-	event_name_col: 'action'
-	distinct_id_col: 'uuid'
-	time_col: 'timestamp'
+	event_name_col: 'action',
+	distinct_id_col: 'uuid',
+	time_col: 'timestamp',
 	insert_id_col: 'insert_id'
 }
 ```
@@ -299,7 +299,7 @@ then produces these events in mixpanel:
       $insert_id: "abc-123",
       theme: "dark",
       class: "cleric",
-    },
+    }
   },
   {
     event: "defend",
@@ -309,7 +309,7 @@ then produces these events in mixpanel:
       $insert_id: "xyz-345",
       theme: "light",
       class: "bard",
-    },
+    }
   },
   //etc...
 ];
@@ -328,14 +328,14 @@ an object `{}` containing authentication details used to connect to your mixpane
 	region: 'US',				//or EU
 
 	//one of service details OR api secret is required
-	service_account: '',  		//service account user name
-	service_secret: '', 		//service account secret
+	service_account: '',  			//service account user name
+	service_secret: '', 			//service account secret
 
 	api_secret: '',				//project api secret [deprecated]
 
 
 	//required for profiles
- 	token: '', 					//mixpanel project token
+ 	token: '', 				//mixpanel project token
 
 	//required for groups
 	groupKey: '',				//the group key for this group
@@ -422,13 +422,15 @@ in my experience, the `data viewer` + `bigquery job user` roles set together sat
 the typical fields used for auth are `project_id`, `private_key`, and `client_email`; `location` will need to be added manually based on the [region of your bigquery instance](https://cloud.google.com/bigquery/docs/locations):
 
 ```javascript
-dwh: "bigquery",
-auth : {
-		"project_id": "my-gcp-project", //GCP project
-		"client_email": "serviceAccount@email.com", //service acct email
-		"private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",	// service account private key
-		"location": "US" //bigquery location.. this is required!
-	}
+{
+	dwh: "bigquery",
+	auth : {
+			"project_id": "my-gcp-project", //GCP project
+			"client_email": "serviceAccount@email.com", //service acct email
+			"private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",	// service account private key
+			"location": "US" //bigquery location.. this is required!
+		}
+}
 ```
 
 in most cases, you can [drop your exported JSON keys](https://cloud.google.com/iam/docs/creating-managing-service-accounts) into the `auth` param, and it will work.
@@ -442,15 +444,17 @@ snowflake jobs with authenticate with a user name + password. note that 2FA is n
 the fields used for auth are [`account`](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html) identifier, `username`, and `password`; you will also need to provide your [`warehouse`](https://docs.snowflake.com/en/sql-reference/sql/show-warehouses.html) name, [`database`](https://docs.snowflake.com/en/sql-reference/sql/show-databases.html) name, and table [`schema`](https://docs.snowflake.com/en/sql-reference/sql/show-schemas.html). most of these values can be found in the UI or the SQL console.
 
 ```javascript
-dwh: "snowflake",
-auth : {
-        "account": "foobar.us-central1.gcp", // your snowflake identifier
-        "username": "",
-        "password": "",
-        "database": "PROD1", // database to use
-        "schema": "PUBLIC", // schema to use
-        "warehouse": "COMPUTE_WH" //warehouse to use
-    }
+{
+	dwh: "snowflake",
+	auth : {
+			"account": "foobar.us-central1.gcp", // your snowflake identifier
+			"username": "",
+			"password": "",
+			"database": "PROD1", // database to use
+			"schema": "PUBLIC", // schema to use
+			"warehouse": "COMPUTE_WH" //warehouse to use
+		}
+}
 ```
 
 no special permissions are required for snowflake - only that the user/pass you entered can view and query the dataset.
@@ -472,19 +476,21 @@ since athena _depends on_ **S3**, your account will _also_ need access to the fo
 
 the **S3** bucket you assign permissions to should be the same one **athena** uses for storage; you can see this in the athena UI:
 
-<img src="https://aktunes.neocities.org/dwh-mixpanel/athenaLocation.png" alt="athena storage location" />
+<img src="https://aktunes.neocities.org/dwh-mixpanel/athenaLocation.png" alt="athena storage location" width=300/>
 
 **note:** all queries made to athena are stored as CSV files in S3; this module uses the `DeleteObject` action to delete the materialized CSV after the data is imported into mixpanel.
 
 most AWS accounts can be [setup for programmatic access](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) using an `accessKeyId` and a `secretAccessKey`; you'll also need to add the `region` of your S3 instance.
 
 ```javascript
-dwh: "athena",
-auth : {
-		"accessKeyId": "",
-		"secretAccessKey": "",
-		"region": "us-east-2" //note this is important!
-	}
+{
+	dwh: "athena",
+	auth : {
+			"accessKeyId": "",
+			"secretAccessKey": "",
+			"region": "us-east-2" //note this is important!
+		}
+}
 ```
 
 <div id="env"></div>
