@@ -566,7 +566,7 @@ function getOptions(dwh, mixpanel) {
 			]
 		},
 		{
-			message: "is this a test run?\t\t(note this will add a 'LIMIT 1000' to your query)",
+			message: "is this a test run?\t\t(note this will add 'LIMIT 1000' to your query)",
 			name: "test",
 			type: "list",
 			suffix: '\n',
@@ -579,7 +579,7 @@ function getOptions(dwh, mixpanel) {
 
 	const askForEvents = [
 		{
-			message: "do you want to use strict mode?",
+			message: "do you want to use strict mode?\t\tnote: you will need an insert_id in your SQL",
 			name: "strict",
 			type: "list",
 			suffix: '\n',

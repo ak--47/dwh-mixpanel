@@ -12,7 +12,7 @@ import {
 	AthenaClient,
 	StartQueryExecutionCommand,
 	GetQueryExecutionCommand,
-	GetQueryResultsCommand,
+	GetQueryResultsCommand
 } from "@aws-sdk/client-athena";
 
 import {
