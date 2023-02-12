@@ -8,7 +8,7 @@ import sql from 'node-sql-parser';
 
 export default async function snowflake(config, outStream) {
 	const { query, ...dwhAuth } = config.dwhAuth();
-	
+
 	// * SQL ANALYSIS
 	const sqlParse = new sql.Parser();
 	let tableList, columnList, ast;
@@ -67,9 +67,8 @@ export default async function snowflake(config, outStream) {
 		return csv;
 	}
 
-	
 	// * STREAM
-	else {		
+	else {
 		emitter.emit('dwh query start', config);
 		const statement = snowflake.createStatement({
 			sqlText: query,
@@ -85,6 +84,7 @@ export default async function snowflake(config, outStream) {
 					if (statement.getStatus() === 'complete') {
 						emitter.emit('dwh query end', config);
 						config.store({ statementId: statement.getStatementId() });
+						config.store({ rows: statement.getNumRows() });
 					}
 				})
 				.on("data", (row) => {

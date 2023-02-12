@@ -1,6 +1,6 @@
 {
 	"name": "dwh-mixpanel",
-	"version": "1.0.21",
+	"version": "1.0.3",
 	"description": "rETL from a data warehouse to mixpanel",
 	"main": "index.js",
 	"repository": {
@@ -43,7 +43,7 @@
 		"highland": "^2.13.5",
 		"inquirer": "^9.1.4",
 		"lodash": "^4.17.21",
-		"mixpanel-import": "^2.2.287",
+		"mixpanel-import": "^2.2.321",
 		"node-sql-parser": "^4.6.4",
 		"p-event": "^5.0.1",
 		"papaparse": "^5.3.2",

@@ -56,11 +56,12 @@ export default async function bigquery(config, outStream) {
 			const { schema, ...tempTable } = tableMeta.metadata;
 			config.store({ schema: schema.fields });
 			config.store({ table: tempTable });
+			config.store({ rows: Number(tempTable.numRows) });
 
 			//model time transforms
 			const dateFields = schema.fields
 				.filter(f => ['DATETIME', 'DATE', 'TIMESTAMP', 'TIME']
-				.includes(f.type))
+					.includes(f.type))
 				.map(f => f.name);
 			if (config.type === "event") {
 				//events get unix epoch
@@ -86,7 +87,7 @@ export default async function bigquery(config, outStream) {
 			// stream results
 			emitter.emit('dwh stream start', config);
 			job
-				.getQueryResultsStream()
+				.getQueryResultsStream({ highWaterMark: 2000 * config.options.workers, timeoutMs: 0 })
 				.on("error", reject)
 				.on("data", (row) => {
 					config.got();

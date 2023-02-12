@@ -7,7 +7,7 @@ export default function createStream(config, cb = () => { }) {
 	let reqCount = 0;
 	const inStream = new Stream.PassThrough({
 		objectMode: true,
-		highWaterMark: config.options.workers * 10000
+		highWaterMark: config.options.workers * 2000
 	});
 
 	//tables cannot be streamed!
@@ -30,15 +30,20 @@ export default function createStream(config, cb = () => { }) {
 
 	inStream.on("error", (err) => {
 		if (config.verbose) u.cLog(err, 'dwh fail', 'ERROR');
+		config.log(err)
 	});
 
 	outStream.on("error", (err) => {
 		if (config.verbose) u.cLog(err, 'mp fail', 'ERROR');
+		config.log(err)
 	});
+
+	outStream.once('data', ()=>{
+		emitter.emit('mp import start', config);
+	})
 
 	outStream.on("data", () => {
 		reqCount++;
-		emitter.emit('mp import start', config);
 		if (config.verbose) u.progress('\tbatches', reqCount, 'sent:');
 	});
 

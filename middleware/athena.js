@@ -12,7 +12,8 @@ import {
 	AthenaClient,
 	StartQueryExecutionCommand,
 	GetQueryExecutionCommand,
-	GetQueryResultsCommand
+	GetQueryResultsCommand,
+	GetQueryRuntimeStatisticsCommand
 } from "@aws-sdk/client-athena";
 
 import {
@@ -71,7 +72,10 @@ export default async function athena(config, outStream) {
 		queryFinished?.QueryExecution?.Status?.State === 'QUEUED' ||
 		queryFinished?.QueryExecution?.Status?.State === 'RUNNING'
 	);
-
+	const getQueryRows = new GetQueryRuntimeStatisticsCommand({ QueryExecutionId: execId });
+	const queryStats = await athena.send(getQueryRows);
+	config.store({ queryStats });
+	config.store({ rows: queryStats.QueryRuntimeStatistics.Rows.OutputRows });
 	emitter.emit('dwh query end', config);
 
 	// * S3
@@ -141,7 +145,7 @@ export default async function athena(config, outStream) {
 	}
 
 	else {
-		// * STREAM
+		// * STREAM FROM S3
 		const getCSVasJSON = new SelectObjectContentCommand({
 			Bucket: s3Location.bucket,
 			Key: s3Location.key,
