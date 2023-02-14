@@ -48,6 +48,17 @@ describe('bigQuery', () => {
 
 	}, timeout);
 
+	test('verbose events', async () => {
+		const { mixpanel, bigquery, time } = await main({ ...bqEvents, ...opts, verbose: true });
+		expect(mixpanel.success).toBe(10005);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(6);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(bigquery.job.status.state).toBe('DONE');
+
+
+	}, timeout);
+
 	test('users', async () => {
 		const { mixpanel, bigquery, time } = await main({ ...bqUsers, ...opts });
 		expect(mixpanel.success).toBe(10005);

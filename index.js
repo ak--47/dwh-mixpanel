@@ -158,7 +158,9 @@ async function main(params) {
 		try {
 			const fileName = resolve(config.options.logFile);
 			const logFile = await u.touch(fileName, result, true, false, true);
-			u.cLog(c.gray(`logs written to ${logFile}\n\n`));
+			if (config.verbose) {
+				u.cLog(c.gray(`logs written to ${logFile}\n\n`));
+			}
 		}
 		catch (e) {
 			if (config.verbose) {
@@ -237,11 +239,15 @@ emitter.once('mp import end', (config) => {
 });
 
 emitter.on('dwh batch', (config) => {
-	config.progress(1, 'dwh');
+	if (config.verbose) {
+		config.progress(1, 'dwh');
+	}
 });
 
 emitter.on('mp batch', (config, numImported) => {
-	config.progress(numImported, 'mp');
+	if (config.verbose) {
+		config.progress(numImported, 'mp');
+	}
 });
 
 /*
