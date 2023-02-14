@@ -42,6 +42,7 @@ import _ from "lodash";
 
 // eslint-disable-next-line no-unused-vars
 import * as Types from "./types/types.js";
+import c from 'ansi-colors';
 
 /*
 --------
@@ -74,7 +75,7 @@ async function main(params) {
 		)
 	);
 
-	if (config.verbose) u.cLog('\nSTART!');
+	if (config.verbose) u.cLog(c.red('\nSTART!'));
 
 	const { type, version, warehouse } = config;
 	const props = { runId, type, version, warehouse };
@@ -112,14 +113,20 @@ async function main(params) {
 			default:
 				if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);
 				mpStream.destroy();
-				track('unsupported warehouse', props)
+				track('unsupported warehouse', props);
 				throw new Error('unsupported warehouse', { cause: config.warehouse, config });
 		}
 	}
 
 	catch (e) {
 		track('warehouse error', { ...props, msg: e.message });
-		if (config.verbose) u.cLog(e, `${config.warehouse} error: ${e.message}`, `CRITICAL`);
+		if (config.verbose) {
+			console.log(c.redBright.bold(`\n${config.warehouse.toUpperCase()} ERROR:`));
+			console.log(c.redBright.bold(e.message));
+		}
+		else {
+			u.cLog(e, `${config.warehouse} error: ${e.message}`, `CRITICAL`);
+		}
 		mpStream.destroy();
 		throw e;
 	}
@@ -139,7 +146,7 @@ async function main(params) {
 			await pEvent(emitter, 'mp import end');
 			mpStream.destroy();
 		} catch (e) {
-			u.cLog(e, 'UNKNOWN FAILURE', 'CRITICAL');
+			u.cLog(e, c.red('UNKNOWN FAILURE'), 'CRITICAL');
 			throw e;
 		}
 	}
@@ -151,11 +158,11 @@ async function main(params) {
 		try {
 			const fileName = resolve(config.options.logFile);
 			const logFile = await u.touch(fileName, result, true, false, true);
-			u.cLog(`logs written to ${logFile}`);
+			u.cLog(c.gray(`logs written to ${logFile}\n\n`));
 		}
 		catch (e) {
 			if (config.verbose) {
-				u.cLog('failed to write logs');
+				u.cLog(c.red('failed to write logs'));
 			}
 
 		}
@@ -172,34 +179,41 @@ LISTENERS
 
 emitter.once('dwh query start', (config) => {
 	config.queryTime.start();
-	if (config.verbose) u.cLog(`\n${config.dwh} query start`);
+	if (config.verbose) u.cLog(c.cyan(`\n${config.dwh} query start`));
 
 });
 
 emitter.once('dwh query end', (config) => {
 	config.queryTime.end(false);
 	if (config.verbose) {
-		u.cLog(`${config.dwh} query end`);
-		u.cLog(`\t${config.warehouse} took ${config.queryTime.report(false).human}\n`);
+		u.cLog(c.cyan(`${config.dwh} query end`));
+		u.cLog(c.cyan(`\t${config.warehouse} took ${config.queryTime.report(false).human}\n`));
 	}
 });
 
 emitter.once('dwh stream start', (config) => {
 	config.streamTime.start();
-	if (config.verbose) u.cLog(`\n${config.dwh} stream start`);
+	if (config.verbose) {
+		// u.cLog(`\n${config.dwh} stream start`);
+		u.cLog(c.magenta(`\nstreaming started! (${u.comma(config.dwhStore.rows)} ${config.type}s)\n`));
+		config.progress({ total: config.dwhStore.rows, startValue: 0 });
+	}
 });
 
 emitter.once('dwh stream end', (config) => {
 	config.streamTime.end(false);
 	if (config.verbose) {
-		u.cLog(`${config.dwh} stream end`);
-		u.cLog(`\t${config.warehouse} took ${config.streamTime.report(false).human}\n`);
+		// u.cLog(`${config.dwh} stream end`);
+		// u.cLog(`\t${config.warehouse} took ${config.streamTime.report(false).human}\n`);
 	}
 });
 
 emitter.once('mp import start', (config) => {
 	config.importTime.start();
-	if (config.verbose) u.cLog(`\nmixpanel import start`);
+	if (config.verbose) {
+		// u.cLog(`\nmixpanel import start`);
+		config.progress({ total: config.dwhStore.rows, startValue: 0 }, 'mp');
+	}
 });
 
 emitter.once('mp import end', (config) => {
@@ -211,14 +225,23 @@ emitter.once('mp import end', (config) => {
 	const evPerSec = Math.floor((config.inCount / importTime) * 1000);
 
 	if (config.verbose) {
-		u.cLog(`\nmixpanel import end`);
-		u.cLog(`\tmixpanel took ${config.importTime.report(false).human}\n`);
-		u.cLog(`\nCOMPLETE!`);
-		u.cLog(`\nETL processed COMPLETE!`);
-		u.cLog(`\tprocessed ${u.comma(summary.mixpanel.total)} ${config.type}s in ${summary.time.human}`);
-		u.cLog(`\t(${successRate}% success rate; ~${u.comma(evPerSec)} EPS)`);
-		u.cLog(`\ncheck out your data! https://mixpanel.com/project/${config.mpAuth().project}\n`);
+		config.progress(); //stop progress bars
+		// u.cLog(`\nmixpanel import end`);
+		// u.cLog(`\tmixpanel took ${config.importTime.report(false).human}\n`);
+		u.cLog(c.magenta('\nstreaming ended!'));
+		u.cLog(c.red(`\nCOMPLETE!`));
+		u.cLog(c.yellow(`\tprocessed ${u.comma(summary.mixpanel.total)} ${config.type}s in ${summary.time.human}`));
+		u.cLog(c.yellow(`\t(${successRate}% success rate; ~${u.comma(evPerSec)} EPS)`));
+		u.cLog(`\ncheck out your data!\n` + c.blue.underline(`https://mixpanel.com/project/${config.mpAuth().project}\n`));
 	}
+});
+
+emitter.on('dwh batch', (config) => {
+	config.progress(1, 'dwh');
+});
+
+emitter.on('mp batch', (config, numImported) => {
+	config.progress(numImported, 'mp');
 });
 
 /*
@@ -242,7 +265,7 @@ if (esMain(import.meta)) {
 			u.cLog('\nnothing left to do\n\no_0\n\n');
 			process.exit(0);
 		}
-	}).then((result) => {
+	}).then(() => {
 		//noop
 
 	}).catch((e) => {

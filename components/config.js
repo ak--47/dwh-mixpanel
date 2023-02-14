@@ -1,7 +1,10 @@
 import * as u from 'ak-tools';
 import dayjs from 'dayjs';
-import { createRequire } from "node:module"
-const require = createRequire(import.meta.url)
+import cliProgress from 'cli-progress';
+import colors from 'ansi-colors';
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
 // eslint-disable-next-line no-unused-vars
 import * as Types from "../types/types.js";
 
@@ -64,8 +67,50 @@ export default class dwhConfig {
 			import: u.timer('import')
 		};
 
-		this.version = this.getVersion()
+		this.multiBar = new cliProgress.MultiBar({
+			clearOnComplete: false,
+			hideCursor: true,
+			fps: 50,
+			barsize: 60,
+			autopadding: true,
+			etaBuffer: 100
+		}, cliProgress.Presets.rect);
 
+		this.version = this.getVersion();
+
+	}
+
+	progress(createOrUpdate, type = 'dwh') {
+		if (typeof createOrUpdate === 'object') {
+			const { total, startValue } = createOrUpdate;
+			if (type === 'dwh') {
+				this.dwhProgress = this.multiBar.create(total, startValue, {}, {
+					format: `${this.dwh} |` + colors.cyan('{bar}') + `| {value}/{total} ${this.type}s (` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted})`,
+					
+				});
+			}
+			if (type === 'mp') {
+				this.mpProgress = this.multiBar.create(total, startValue, {}, {
+					format: `mixpanel |` + colors.magenta('{bar}') + `| {value}/{total} ${this.type}s (` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted})`
+
+				});
+			};
+		}
+
+
+		else if (typeof createOrUpdate === 'number') {
+			if (type === 'dwh') {
+				this.dwhProgress.increment(createOrUpdate);
+			}
+			if (type === 'mp') {
+				this.mpProgress.increment(createOrUpdate);
+			}
+		}
+
+
+		else {
+			this.multiBar.stop();
+		}
 	}
 
 	getVersion() {
@@ -166,9 +211,10 @@ export default class dwhConfig {
 			compress: opt.compress,
 			strict: opt.strict,
 			logs: false,
-			fixData: false,			
+			fixData: false,
 			verbose: false,
-			workers: opt.workers
+			workers: opt.workers,
+			recordsPerBatch: mp.type === 'group' ? 200 : 2000
 
 		};
 	}
@@ -226,7 +272,7 @@ export default class dwhConfig {
 
 		//events + lookups need an API secret or service acct
 		if ((this.type === 'event' || this.type === 'table') && (!this.mixpanel.api_secret && !this.mixpanel.service_account)) throw 'missing API secret or service account';
-		return true
+		return true;
 	}
 
 }

@@ -4,7 +4,8 @@ import emitter from '../components/emitter.js';
 import u from 'ak-tools';
 
 export default function createStream(config, cb = () => { }) {
-	let reqCount = 0;
+	// let reqCount = 0;
+	
 	const inStream = new Stream.PassThrough({
 		objectMode: true,
 		highWaterMark: config.options.workers * 2000
@@ -42,9 +43,16 @@ export default function createStream(config, cb = () => { }) {
 		emitter.emit('mp import start', config);
 	})
 
-	outStream.on("data", () => {
-		reqCount++;
-		if (config.verbose) u.progress('\tbatches', reqCount, 'sent:');
+	inStream.on('data', ()=>{
+		emitter.emit('dwh batch', config)
+	})
+
+	outStream.on("data", (resp) => {
+		const records = resp?.num_records_imported || config.mpOpts()?.recordsPerBatch || 2000
+		emitter.emit('mp batch', config, records)
+		// reqCount++;
+		// if (config.verbose) u.progress('\tbatches', reqCount, 'sent:');
+
 	});
 
 	return inStream;

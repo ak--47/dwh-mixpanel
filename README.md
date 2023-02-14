@@ -62,7 +62,7 @@ npx dwh-mixpanel snowflake-mixpanel.json
 
 as it runs, you'll get some console output as to the status of your job:
 
-<img src="https://aktunes.neocities.org/dwh-mixpanel/demo.gif" alt="demo" width=400/>
+<img src="https://aktunes.neocities.org/dwh-mixpanel/go.gif" alt="demo" width=500/>
 
 once the pipeline is complete, it will stash logs in the current working directory, and you can see your data in mixpanel!
 
@@ -218,7 +218,7 @@ the fields you must provide mappings for depend on the type of data you're impor
 ```javascript
 {
   // REQUIRED
-  'event_name_col': '', 		// column for event name
+  'event_name_col': '', 	// column for event name
   'distinct_id_col': '', 	// column for uniquer user id
   'time_col': '', 		// column for event time
   // OPTIONAL
@@ -232,9 +232,11 @@ note: `insert_id_col` is **required** when using `strict` mode
 
 ```javascript
 {
-	// REQUIRED
+
+// REQUIRED
  'distinct_id_col': '', // column for uniquer user id
- 	// OPTIONAL
+
+// OPTIONAL
  'profileOperation': '', // the $set style operation to use
  'name_col': '', // column $name to use for the user/group profile
  'email_col': '', // column $email to use for the user/group profile
@@ -251,9 +253,9 @@ note: `insert_id_col` is **required** when using `strict` mode
 
 ```javascript
 {
-	// REQUIRED
-	'lookup_col' : '' //the "join" column for the lookup table
-	//hint: ^ this is usually the first column in the table
+// REQUIRED
+ 'lookup_col' : '' //the "join" column for the lookup table
+//hint: ^ this is usually the first column in the table
 }
 ```
 

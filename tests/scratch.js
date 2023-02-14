@@ -22,9 +22,9 @@ const current = require("../environments/current.json");
 main(current)
 	.then(result => {
 		//noop
-		debugger;
+		// debugger;
 	})
 	.catch(e => {
 		//noop
-		debugger;
+		// debugger;
 	}) 
