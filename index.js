@@ -1,5 +1,6 @@
 #! /usr/bin/env node
 
+
 /*
 ----
 DWH MIXPANEL
@@ -54,9 +55,9 @@ PIPELINE
  * const results = await dwhMixpanel(params)
  * console.log(results.mixpanel) // { duration: 3461, success: 420, responses: [], errors: [] }
  * @param {Types.Params} params your streaming configuration
- * @returns {Types.Summary} summary of the job containing metadata about time/throughput/responses
+ * @returns {Promise<Types.Summary>} summary of the job containing metadata about time/throughput/responses
  */
-async function main(params = {}) {
+async function main(params) {
 	// * TRACKING
 	const track = u.tracker('dwh-mixpanel');
 	const runId = u.uid();

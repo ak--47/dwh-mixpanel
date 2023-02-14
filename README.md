@@ -468,6 +468,7 @@ to query athena from this module, your user account (or service account) will ne
 - [`StartQueryExecution`](https://docs.aws.amazon.com/athena/latest/APIReference/API_StartQueryExecution.html)
 - [`GetQueryExecution`](https://docs.aws.amazon.com/athena/latest/APIReference/API_GetQueryExecution.html)
 - [`GetQueryResults`](https://docs.aws.amazon.com/athena/latest/APIReference/API_GetQueryResults.html)
+- [`GetQueryRuntimeStatistics`](https://docs.aws.amazon.com/athena/latest/APIReference/API_GetQueryRuntimeStatistics.html)
 
 since athena _depends on_ **S3**, your account will _also_ need access to the following actions in **S3**:
 
