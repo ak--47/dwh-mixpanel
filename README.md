@@ -20,10 +20,10 @@ run the module, and provide a [configuration file](#config) as the first argumen
 npx dwh-mixpanel ./myConfig.json
 ```
 
-for help building a [configuration file](#config), run the module with no arguments:
+for help building a [configuration file](#config), run the module **with no arguments**:
 
 ```bash
-npx dwh-mixpanel ./myConfig.json
+npx dwh-mixpanel
 ```
 
 **what next?**
