@@ -437,11 +437,37 @@ the typical fields used for auth are `project_id`, `private_key`, and `client_em
 
 in most cases, you can [drop your exported JSON keys](https://cloud.google.com/iam/docs/creating-managing-service-accounts) into the `auth` param, and it will work.
 
+###### ADC Authentication
+
+if you are running `dwh-mixpanel` from your local computer, and **you _do not_ have IAM access in GCP to create service accounts**, but you _do_ have user-level access to the datasets in BigQuery, you can use **[Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/provide-credentials-adc#local-dev)** which leverages _your_ GCP account to authenticate with bigQuery's APIs.
+
+the general steps here are:
+- install the [`gcloud` CLI](https://cloud.google.com/sdk/docs/install) and [initialize it](https://cloud.google.com/sdk/gcloud/reference/init)
+```bash
+gcloud init
+```
+- create [a credential file](https://cloud.google.com/docs/authentication/provide-credentials-adc#local-dev)
+```bash
+gcloud auth application-default login
+```
+- set your [configuration file's](#config) `auth` param to an empty object `{}`
+```javascript
+{
+	"dwh": "bigquery",
+	"auth": {},
+	"sql": "SELECT * FROM FOO"
+}
+```
+- run `dwh-mixpanel` with your updated [configuration file](#config):
+```bash
+npx dwh-mixpanel ./bigquery-mixpanel
+```
+
 <div id="snowflake"></div>
 
 ##### Snowflake
 
-snowflake jobs with authenticate with a user name + password. note that 2FA is not currently supported in this module.
+snowflake jobs with authenticate with a user name + password.
 
 the fields used for auth are [`account`](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html) identifier, `username`, and `password`; you will also need to provide your [`warehouse`](https://docs.snowflake.com/en/sql-reference/sql/show-warehouses.html) name, [`database`](https://docs.snowflake.com/en/sql-reference/sql/show-databases.html) name, and table [`schema`](https://docs.snowflake.com/en/sql-reference/sql/show-schemas.html). most of these values can be found in the UI or the SQL console.
 
@@ -460,6 +486,8 @@ the fields used for auth are [`account`](https://docs.snowflake.com/en/user-guid
 ```
 
 no special permissions are required for snowflake - only that the user/pass you entered can view and query the dataset.
+
+note: 2FA with Snowflake is _not_ currently supported in this module.
 
 <div id="athena"></div>
 

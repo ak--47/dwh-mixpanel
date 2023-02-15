@@ -10,7 +10,8 @@ const timeout = 60000;
 const bqEvents = require('../environments/bigquery/events.json');
 const bqUsers = require('../environments/bigquery/users.json');
 const bqGroups = require('../environments/bigquery/groups.json');
-const bgTables = require('../environments/bigquery/tables.json');
+const bqTables = require('../environments/bigquery/tables.json');
+const bqAdc = require('../environments/bigquery/adc.json');
 
 const sflakeEvents = require('../environments/snowflake/events.json');
 const sflakeUsers = require('../environments/snowflake/users.json');
@@ -59,6 +60,17 @@ describe('bigQuery', () => {
 
 	}, timeout);
 
+	test('adc creds', async () => {
+		const { mixpanel, bigquery, time } = await main({ ...bqAdc, ...opts, verbose: true });
+		expect(mixpanel.success).toBe(10005);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(6);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(bigquery.job.status.state).toBe('DONE');
+
+
+	}, timeout);
+
 	test('users', async () => {
 		const { mixpanel, bigquery, time } = await main({ ...bqUsers, ...opts });
 		expect(mixpanel.success).toBe(10005);
@@ -81,7 +93,7 @@ describe('bigQuery', () => {
 	}, timeout);
 
 	test('tables', async () => {
-		const { mixpanel, bigquery, time } = await main({ ...bgTables, ...opts });
+		const { mixpanel, bigquery, time } = await main({ ...bqTables, ...opts });
 		expect(mixpanel.success).toBe(1000);
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(1);

@@ -3,7 +3,7 @@ import emitter from '../components/emitter.js';
 import csvMaker from '../components/csv.js';
 import u from 'ak-tools';
 import { BigQuery } from "@google-cloud/bigquery";
-import { auth } from 'google-auth-library';
+// import { auth } from 'google-auth-library';
 import sql from 'node-sql-parser';
 import dayjs from "dayjs";
 
@@ -21,18 +21,45 @@ export default async function bigquery(config, outStream) {
 
 	// todo support other auth types: 
 	// ? https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest
-	// eslint-disable-next-line no-unused-vars
-	const googAuth = auth.fromJSON(dwhAuth);
+	// let googAuth;
+	// try {
+	// 	// eslint-disable-next-line no-unused-vars
+	// 	googAuth = auth.fromJSON(dwhAuth);
+	// }
+	// catch (e) {
+	// 	//noop
+	// 	// todo use this:
+	// 	googAuth = await auth.getApplicationDefault()
+	// }
 
-	// docs: https://googleapis.dev/nodejs/bigquery/latest/index.html
-	const bigquery = new BigQuery({
-		// authClient: googAuth
-		projectId: dwhAuth.project_id,
-		credentials: {
-			client_email: dwhAuth.client_email,
-			private_key: dwhAuth.private_key
-		}
-	});
+	// * AUTH
+	let bigquery;
+	if (dwhAuth.project_id && dwhAuth.client_email && dwhAuth.private_key) {
+		// ! SERVICE ACCT AUTH
+		// ? https://cloud.google.com/bigquery/docs/authentication/service-account-file
+		bigquery = new BigQuery({
+			projectId: dwhAuth.project_id,			
+			credentials: {
+				client_email: dwhAuth.client_email,
+				private_key: dwhAuth.private_key
+			}
+		});
+		if (config.verbose) u.cLog('\tusing service account credentials');
+
+	}
+
+	else {
+		// ! ADC AUTH
+		// ? https://cloud.google.com/docs/authentication/provide-credentials-adc#local-dev
+		bigquery = new BigQuery();
+		if (config.verbose) u.cLog('\tattempting to use application default credentials');
+	}
+
+
+
+
+
+
 
 	// note: location must match that of the dataset(s) referenced in the query.
 	const options = {

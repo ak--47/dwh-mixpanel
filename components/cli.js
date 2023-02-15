@@ -704,7 +704,7 @@ function verifySQL(sqlText) {
 		}
 
 		catch (e) {
-			valid = 'not a syntactically valid SQL Query';
+			valid = 'not a syntactically valid SQL Query; try a minifier: https://codebeautify.org/sql-minifier';
 		}
 
 	}
