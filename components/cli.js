@@ -49,6 +49,13 @@ export default async function cli() {
 	if (options.test) sql += ` LIMIT 1000`;
 	if (!mappings.insert_id_col) options.strict = false;
 
+	if (options.shouldLog) {
+		options.logFile = `./log-${dwh}-mixpanel.json`;
+	}
+	else {
+		options.logFile = '';
+	}
+
 	// * SAVE CONFIG
 	const config = {
 		dwh,

@@ -112,6 +112,7 @@ export default async function bigquery(config, outStream) {
 
 
 			// stream results
+			// ? https://stackoverflow.com/a/41169200 apparently this is faster?
 			emitter.emit('dwh stream start', config);
 			job
 				.getQueryResultsStream({ highWaterMark: 2000 * config.options.workers, timeoutMs: 0 })
