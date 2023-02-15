@@ -36,7 +36,7 @@ npx dwh-mixpanel
 
 ## 🍿 demo
 
-todo
+<a href="https://youtu.be/E6FeqVRVZjM"><img src="https://aktunes.neocities.org/dwh-mixpanel/frame.png" alt="bigquery to mixpanel demo" width=600/></a>
 
 <div id="cli"></div>
 
@@ -152,7 +152,7 @@ your configuration is an object (or JSON) with the following structure:
 
 ```javascript
 {
-	dwh: "", 		// warehouse name
+	dwh: "",		// warehouse name
 	auth: {},		// warehouse auth details
 	sql: "",		// a SQL query
 	mappings: {},	// col headers → mixpanel fields

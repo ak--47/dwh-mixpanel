@@ -86,13 +86,13 @@ export default class dwhConfig {
 				const { total, startValue } = createOrUpdate;
 				if (type === 'dwh') {
 					this.dwhProgress = this.multiBar.create(total, startValue, {}, {
-						format: `${this.dwh} |` + colors.cyan('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted})`,
+						format: `${this.dwh} |` + colors.cyan('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted}`,
 
 					});
 				}
 				if (type === 'mp') {
 					this.mpProgress = this.multiBar.create(total, startValue, {}, {
-						format: `mixpanel |` + colors.magenta('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted})`
+						format: `mixpanel |` + colors.magenta('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted}`
 
 					});
 				};
