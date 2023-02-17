@@ -48,15 +48,18 @@ export default async function azure(config, outStream) {
 		return csv;
 	}
 
-	// * QUERY
+	// * METADATA
+	emitter.emit('dwh query start', config);
+	//todo deal with trailing semicolons in query;
+	const rowCountQuery = await (new mssql.Request(pool)).query(`WITH count_query AS (${query})  SELECT COUNT(*) as rows FROM count_query;`);
+	config.store({ rows: rowCountQuery.recordset[0].rows });
+
+	// * STREAMING QUERY
 	const job = new mssql.Request(pool);
 	job.stream = true;
-	emitter.emit('dwh query start', config);
-	job.query(query);
 
+	job.query(`${query}`);
 
-	//todo figure out how many rows so progress bar..
-	config.store({ rows: 1000000 });
 
 	return new Promise((resolve, reject) => {
 		job.on('recordset', (columns) => {
@@ -74,10 +77,12 @@ export default async function azure(config, outStream) {
 		});
 
 		job.on('rowsaffected', (rowCount) => {
+			// ! seems to fire last
 			config.store({ rows: rowCount });
 		});
 
 		job.on('info', (message) => {
+			// ! dunno what this is
 			debugger;
 		});
 
@@ -91,7 +96,6 @@ export default async function azure(config, outStream) {
 			pool.close();
 			resolve(config);
 		});
-
 	});
 
 }
