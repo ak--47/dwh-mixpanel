@@ -21,6 +21,7 @@ import createStream from "./middleware/mixpanel.js";
 import bigQuery from './middleware/bigquery.js';
 import snowflake from './middleware/snowflake.js';
 import athena from './middleware/athena.js';
+import azure from "./middleware/azure.js";
 
 /*
 ----
@@ -109,6 +110,9 @@ async function main(params) {
 				break;
 			case 'athena':
 				dwh = await athena(config, mpStream);
+				break;
+			case 'azure':
+				dwh = await azure(config, mpStream);
 				break;
 			default:
 				if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);
@@ -240,13 +244,23 @@ emitter.once('mp import end', (config) => {
 
 emitter.on('dwh batch', (config) => {
 	if (config.verbose) {
-		config.progress(1, 'dwh');
+		try {
+			config.progress(1, 'dwh');
+		}
+		catch (e) {
+			//noop
+		}
 	}
 });
 
 emitter.on('mp batch', (config, numImported) => {
 	if (config.verbose) {
-		config.progress(numImported, 'mp');
+		try {
+			config.progress(numImported, 'mp');
+		}
+		catch(e) {
+			//noop
+		}
 	}
 });
 

@@ -13,7 +13,7 @@ export default async function snowflake(config, outStream) {
 	const sqlParse = new sql.Parser();
 	let tableList, columnList, ast;
 	try {
-		({ tableList, columnList, ast } = sqlParse.parse(query, { database: 'MySQL', }));
+		({ tableList, columnList, ast } = sqlParse.parse(query, { database: 'MySQL'}));
 		config.store({ sqlAnalysis: { tableList, columnList, ast } });
 	} catch (e) {
 		if (config.verbose) u.cLog("\ncould not parse SQL query to AST...\n\tthat's ok though!!!\n");

@@ -13,7 +13,7 @@ export default async function bigquery(config, outStream) {
 	const sqlParse = new sql.Parser();
 	let tableList, columnList, ast;
 	try {
-		({ tableList, columnList, ast } = sqlParse.parse(query, { database: 'BigQuery', }));
+		({ tableList, columnList, ast } = sqlParse.parse(query, { database: 'BigQuery' }));
 		config.store({ sqlAnalysis: { tableList, columnList, ast } });
 	} catch (e) {
 		if (config.verbose) u.cLog("\ncould not parse SQL query to AST...\n\tthat's ok though!!!\n");

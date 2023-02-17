@@ -82,17 +82,29 @@ export default class dwhConfig {
 
 	progress(createOrUpdate, type = 'dwh') {
 		if (this.verbose) {
+			//make labels the same padding
+			let dwhLabel = this.dwh
+			let mixpanelLabel = "mixpanel"
+			while (dwhLabel.length !== mixpanelLabel.length ) {
+				if (dwhLabel.length > mixpanelLabel.length) {
+					mixpanelLabel += " "
+				}
+				else {
+					dwhLabel += " "
+				}
+			}
+
 			if (typeof createOrUpdate === 'object') {
 				const { total, startValue } = createOrUpdate;
 				if (type === 'dwh') {
 					this.dwhProgress = this.multiBar.create(total, startValue, {}, {
-						format: `${this.dwh} |` + colors.cyan('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted}`,
+						format: `${dwhLabel} |` + colors.cyan('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted}`,
 
 					});
 				}
 				if (type === 'mp') {
 					this.mpProgress = this.multiBar.create(total, startValue, {}, {
-						format: `mixpanel |` + colors.magenta('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted}`
+						format: `${mixpanelLabel} |` + colors.magenta('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted}`
 
 					});
 				};
@@ -257,6 +269,19 @@ export default class dwhConfig {
 				region: this.auth.region,
 				query: this.sql
 			};
+		}
+
+		if (this.dwh === 'azure') {
+			return {
+				query: this.sql,
+				connection: this.auth.connectionString
+			}
+		}
+
+		else {
+			return {
+				query: this.sql
+			}
 		}
 	}
 
