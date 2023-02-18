@@ -9,6 +9,7 @@ Supported Data Warehouses:
 - [Google BigQuery](#bq)
 - [AWS Athena](#athena)
 - [Snowflake](#snowflake)
+- [Microsoft Azure SQL](#azure)
 
 <div id="tldr"></div>
 
@@ -523,6 +524,59 @@ most AWS accounts can be [setup for programmatic access](https://docs.aws.amazon
 		}
 }
 ```
+
+<div id="azure"></div>
+
+##### Azure
+
+Azure SQL (managed + on premise) Servers use usernames and passwords for authentication; there are no special permissions required... the user you authenticate as should have permissions to run the query.
+
+there are two common patterns for entering credentials, **connection strings** and **structured objects** ... they are essentially the same thing in different formats:
+
+- **connection string**
+a connection string is a long string which contains username, password, database, port and some other options to establish a secure connection with your database. they look like this:
+
+```
+Server=tcp:my-sql-server.database.windows.net,1433;Database=database;User Id=username;Password=password;Encrypt=true
+Driver=msnodesqlv8;Server=(local)\INSTANCE;Database=database;UID=DOMAIN\username;PWD=password;Encrypt=true
+```
+
+you can input your connection string into the `auth` object with the key `connection_string`:
+```javascript
+{
+	dwh: "azure",
+	auth: {
+		connection_string: "my-sql-server.database.windows.net,1433; etc..."
+	}
+}
+```
+
+if your database is hosted in Azure Cloud, you can find your connection strings in the Azure SQL UI; this module uses the **ADO.NET** syntax:
+
+<img src="https://aktunes.neocities.org/dwh-mixpanel/azureStrings.png" alt="azure cloud screenshot" width=420/>
+
+make sure to choose the right connection string version that is supported by your database. 
+(hint: not all Azure DBs are setup with Active Directory)
+
+- **JSON**
+
+if you wish, you may also pass your credentials as JSON; the parameters are very similar look like this:
+
+```javascript
+{
+	dwh: "azure",
+	auth: {
+		user: "",
+		password: "",
+		server: "",
+		port: 1433, //default
+		domain: "",
+		database: ""
+	}
+}
+```
+you can also pass other pool configuration options to the `auth` object... [see the full list of params](https://github.com/tediousjs/node-mssql#general-same-for-all-drivers)
+
 
 <div id="env"></div>
 

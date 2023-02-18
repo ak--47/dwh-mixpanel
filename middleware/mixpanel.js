@@ -4,7 +4,6 @@ import emitter from '../components/emitter.js';
 import u from 'ak-tools';
 
 export default function createStream(config, cb = () => { }) {
-	// let reqCount = 0;
 	
 	const inStream = new Stream.PassThrough({
 		objectMode: true,
@@ -50,9 +49,6 @@ export default function createStream(config, cb = () => { }) {
 	outStream.on("data", (resp) => {
 		const records = resp?.num_records_imported || config.mpOpts()?.recordsPerBatch || 2000
 		emitter.emit('mp batch', config, records)
-		// reqCount++;
-		// if (config.verbose) u.progress('\tbatches', reqCount, 'sent:');
-
 	});
 
 	return inStream;

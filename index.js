@@ -21,6 +21,7 @@ import createStream from "./middleware/mixpanel.js";
 import bigQuery from './middleware/bigquery.js';
 import snowflake from './middleware/snowflake.js';
 import athena from './middleware/athena.js';
+import azure from "./middleware/azure.js";
 
 /*
 ----
@@ -110,6 +111,9 @@ async function main(params) {
 			case 'athena':
 				dwh = await athena(config, mpStream);
 				break;
+			case 'azure':
+				dwh = await azure(config, mpStream);
+				break;
 			default:
 				if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);
 				mpStream.destroy();
@@ -197,7 +201,7 @@ emitter.once('dwh stream start', (config) => {
 	config.streamTime.start();
 	if (config.verbose) {
 		// u.cLog(`\n${config.dwh} stream start`);
-		u.cLog(c.magenta(`\nstreaming started! (${u.comma(config.dwhStore.rows)} ${config.type}s)\n`));
+		u.cLog(c.magenta(`\nstreaming started! (${config.dwhStore.rows > 0 ? u.comma(config.dwhStore.rows) : "unknown number of"} ${config.type}s)\n`));
 		config.progress({ total: config.dwhStore.rows, startValue: 0 });
 	}
 });
@@ -240,13 +244,23 @@ emitter.once('mp import end', (config) => {
 
 emitter.on('dwh batch', (config) => {
 	if (config.verbose) {
-		config.progress(1, 'dwh');
+		try {
+			config.progress(1, 'dwh');
+		}
+		catch (e) {
+			//noop
+		}
 	}
 });
 
 emitter.on('mp batch', (config, numImported) => {
 	if (config.verbose) {
-		config.progress(numImported, 'mp');
+		try {
+			config.progress(numImported, 'mp');
+		}
+		catch(e) {
+			//noop
+		}
 	}
 });
 
