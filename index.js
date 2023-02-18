@@ -201,7 +201,7 @@ emitter.once('dwh stream start', (config) => {
 	config.streamTime.start();
 	if (config.verbose) {
 		// u.cLog(`\n${config.dwh} stream start`);
-		u.cLog(c.magenta(`\nstreaming started! (${u.comma(config.dwhStore.rows)} ${config.type}s)\n`));
+		u.cLog(c.magenta(`\nstreaming started! (${config.dwhStore.rows > 0 ? u.comma(config.dwhStore.rows) : "unknown number of"} ${config.type}s)\n`));
 		config.progress({ total: config.dwhStore.rows, startValue: 0 });
 	}
 });

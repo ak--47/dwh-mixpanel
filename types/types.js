@@ -5,7 +5,7 @@ JSDOC TYPINGS
 */
 
 /**
- * @typedef {'biquery' | 'athena' | 'snowflake'}  SupportedWarehouses the data warehouses supported by this module
+ * @typedef {'biquery' | 'athena' | 'snowflake' | 'azure'}  SupportedWarehouses the data warehouses supported by this module
  */
 
 /**
@@ -97,6 +97,7 @@ JSDOC TYPINGS
  * @prop {Object} job job metadata from the warehouse
  * @prop {Object} schema schema for the (usually temporary) table created as a result of the query
  * @prop {Object} sqlAnalysis an AST of the user-entered SQL Query
+ * @prop {number} rows the number of rows in the table
  * @prop {Object} [table] additional metadata on the temporary table
  */
 

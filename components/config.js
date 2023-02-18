@@ -83,14 +83,14 @@ export default class dwhConfig {
 	progress(createOrUpdate, type = 'dwh') {
 		if (this.verbose) {
 			//make labels the same padding
-			let dwhLabel = this.dwh
-			let mixpanelLabel = "mixpanel"
-			while (dwhLabel.length !== mixpanelLabel.length ) {
+			let dwhLabel = this.dwh;
+			let mixpanelLabel = "mixpanel";
+			while (dwhLabel.length !== mixpanelLabel.length) {
 				if (dwhLabel.length > mixpanelLabel.length) {
-					mixpanelLabel += " "
+					mixpanelLabel += " ";
 				}
 				else {
-					dwhLabel += " "
+					dwhLabel += " ";
 				}
 			}
 
@@ -274,14 +274,22 @@ export default class dwhConfig {
 		if (this.dwh === 'azure') {
 			return {
 				query: this.sql,
-				connection: this.auth.connectionString
-			}
+				connectionString: this.auth.connection_string,
+				user: this.auth.user,
+				password: this.auth.password,
+				server: this.auth.server,
+				port: this.auth.port,
+				domain: this.auth.domain,
+				database: this.auth.database
+
+			};
 		}
 
 		else {
 			return {
-				query: this.sql
-			}
+				query: this.sql,
+				...this.auth
+			};
 		}
 	}
 

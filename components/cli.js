@@ -104,7 +104,8 @@ function dwhType() {
 			choices: [
 				{ name: "\tGoogle BigQuery", value: "bigquery" },
 				{ name: "\tSnowflake", value: "snowflake" },
-				{ name: "\tAWS Athena", value: "athena" }
+				{ name: "\tAWS Athena", value: "athena" },
+				{ name: "\tAzure SQL", value: "azure" }
 			]
 		}
 	];
@@ -121,11 +122,12 @@ function dwhAuth(dwh, env) {
 		case "snowflake":
 			questions = snowflakeAuth(env);
 			break;
-
 		case "athena":
 			questions = athenaAuth(env);
 			break;
-
+		case "azure":
+			questions = azureAuth(env);
+			break;
 		default:
 			break;
 	}
@@ -202,6 +204,19 @@ function bigqueryAuth(env) {
 			type: "input",
 			suffix: "\n",
 			default: env?.auth?.private_key,
+			validate: passesNotEmpty
+		}
+	];
+}
+
+function azureAuth(env) {
+	return [
+		{
+			message: "what's your SQL connection string?",
+			name: "connection_string",
+			type: "input",
+			suffix: "\n",
+			default: env?.auth?.connection_string,
 			validate: passesNotEmpty
 		}
 	];
