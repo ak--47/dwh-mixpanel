@@ -22,6 +22,7 @@ import bigQuery from './middleware/bigquery.js';
 import snowflake from './middleware/snowflake.js';
 import athena from './middleware/athena.js';
 import azure from "./middleware/azure.js";
+import salesforce from "./middleware/salesforce.js"
 
 /*
 ----
@@ -113,6 +114,9 @@ async function main(params) {
 				break;
 			case 'azure':
 				dwh = await azure(config, mpStream);
+				break;
+			case 'salesforce':
+				dwh = await salesforce(config, mpStream)
 				break;
 			default:
 				if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);

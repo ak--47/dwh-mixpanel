@@ -285,6 +285,16 @@ export default class dwhConfig {
 			};
 		}
 
+		if (this.dwh === 'salesforce') {
+			return {
+				query: this.sql,
+				user: this.auth.user,
+				password: this.auth.password,
+				version: this.auth.version?.toString() || "49.0",
+				prettyLabels : this.auth.resolve_field_names || true
+			}
+		}
+
 		else {
 			return {
 				query: this.sql,

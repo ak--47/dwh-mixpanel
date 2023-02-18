@@ -21,7 +21,7 @@ export default async function azure(config, outStream) {
 
 	// * AUTH
 	const auth = dwhAuth.connectionString ? dwhAuth.connectionString : dwhAuth;
-	const pool = await mssql.connect(auth); //todo support things other than connection string
+	const pool = await mssql.connect(auth); 
 	pool.on('error', (e) => { throw e; });
 	config.store({ job: { ...pool.config, password: `******` } });
 
