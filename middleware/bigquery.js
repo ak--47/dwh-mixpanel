@@ -38,7 +38,7 @@ export default async function bigquery(config, outStream) {
 		// ! SERVICE ACCT AUTH
 		// ? https://cloud.google.com/bigquery/docs/authentication/service-account-file
 		bigquery = new BigQuery({
-			projectId: dwhAuth.project_id,			
+			projectId: dwhAuth.project_id,
 			credentials: {
 				client_email: dwhAuth.client_email,
 				private_key: dwhAuth.private_key
@@ -54,12 +54,6 @@ export default async function bigquery(config, outStream) {
 		bigquery = new BigQuery();
 		if (config.verbose) u.cLog('\tattempting to use application default credentials');
 	}
-
-
-
-
-
-
 
 	// note: location must match that of the dataset(s) referenced in the query.
 	const options = {
@@ -90,15 +84,9 @@ export default async function bigquery(config, outStream) {
 				.filter(f => ['DATETIME', 'DATE', 'TIMESTAMP', 'TIME']
 					.includes(f.type))
 				.map(f => f.name);
-			if (config.type === "event") {
-				//events get unix epoch
-				config.timeTransform = (time) => { return dayjs(time.value).valueOf(); };
-			}
-			else {
-				//all others get ISO
-				config.timeTransform = (time) => { return dayjs(time.value).format('YYYY-MM-DDTHH:mm:ss'); };
-			}
 
+			config.eventTimeTransform = (time) => { return dayjs(time.value).valueOf(); };
+			config.timeTransform = (time) => { return dayjs(time.value).format('YYYY-MM-DDTHH:mm:ss'); };
 			const mpModel = transformer(config, dateFields);
 
 			// tables cannot be streamed...they are returned as a CSV
@@ -109,7 +97,6 @@ export default async function bigquery(config, outStream) {
 				const csv = csvMaker(transformedRows);
 				resolve(csv);
 			}
-
 
 			// stream results
 			// ? https://stackoverflow.com/a/41169200 apparently this is faster?

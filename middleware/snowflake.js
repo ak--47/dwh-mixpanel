@@ -4,6 +4,7 @@ import csvMaker from '../components/csv.js';
 import u from 'ak-tools';
 import { Snowflake } from "snowflake-promise";
 import sql from 'node-sql-parser';
+import dayjs from 'dayjs'
 
 
 export default async function snowflake(config, outStream) {
@@ -45,7 +46,8 @@ export default async function snowflake(config, outStream) {
 
 
 	// * MODELING
-	config.timeTransform = (time) => { return time.getTime(); };
+	config.eventTimeTransform = (time) => { return time.getTime(); };
+	config.timeTransform = (time) => { return dayjs.unix(time.getTime()).format('YYYY-MM-DDTHH:mm:ss'); };
 	let dateFields;
 	if (schema) {
 		dateFields = schema

@@ -6,7 +6,6 @@ import u from 'ak-tools';
 import _ from 'lodash'; // https://lodash.com/docs/4.17.15#curryRight
 
 export default function modelStreamedData(config, timeFields) {
-	// todo TIME FIELDS!
 
 	if (config.type === 'event') {
 		return _.partial(
@@ -14,6 +13,7 @@ export default function modelStreamedData(config, timeFields) {
 			_,
 			config.mappings,
 			timeFields,
+			config.eventTimeTransform,
 			config.timeTransform,
 			config.tags || {});
 	}

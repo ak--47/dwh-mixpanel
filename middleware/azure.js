@@ -21,19 +21,14 @@ export default async function azure(config, outStream) {
 
 	// * AUTH
 	const auth = dwhAuth.connectionString ? dwhAuth.connectionString : dwhAuth;
-	const pool = await mssql.connect(auth); 
+	const pool = await mssql.connect(auth);
 	pool.on('error', (e) => { throw e; });
 	config.store({ job: { ...pool.config, password: `******` } });
 
 	// * MODELING
-	if (config.type === "event") {
-		//events get unix epoch
-		config.timeTransform = (time) => { return dayjs(time).valueOf(); };
-	}
-	else {
-		//all others get ISO
-		config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
-	}
+	config.eventTimeTransform = (time) => { return dayjs(time).valueOf(); };
+	config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
+
 	let mpModel; //not available until "readable"
 
 	// * LOOKUP TABLES
@@ -96,7 +91,7 @@ export default async function azure(config, outStream) {
 			emitter.emit('dwh stream start', config);
 			config.store({ schema: columns });
 			const schemaDateFields = Object.keys(u.objFilter(columns, (col) => col?.type?.declaration === 'datetime'));
-			const dateFields = new Set([config.mappings.time_col, ...schemaDateFields]);
+			const dateFields = Array.from(new Set([config.mappings.time_col, ...schemaDateFields]));
 			mpModel = transformer(config, dateFields);
 		});
 

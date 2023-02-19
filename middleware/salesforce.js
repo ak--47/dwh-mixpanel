@@ -9,12 +9,12 @@ import dayjs from "dayjs";
 
 
 export default async function salesforce(config, outStream) {
+	// todo deal with primary id cols
 	// todo lookup tables
-	// todo insert_ids ???
-	// todo resolving nested field names	
+	// todo resolving of doubly nested field names	i.e. Owner.UserRole.Name
 	// todo docs + final refactor
 	// todo tests... lots of 'em
-	
+
 	const { query, ...dwhAuth } = config.dwhAuth();
 	let ast;
 	try {
@@ -25,10 +25,12 @@ export default async function salesforce(config, outStream) {
 	}
 
 	// * AUTH
-	const { user, password, version, prettyLabels } = dwhAuth; // todo diff types of auth: https://jsforce.github.io/document/#connection
+	const { user, password, version, prettyLabels, renameId } = dwhAuth; //todo renameId???
 	const connection = new jsforce.Connection({ version });
-	const login = await connection.login(user, password);
-	config.store({ instance: { ...login } });
+	const login = await connection.login(user, password);  // todo diff types of auth: https://jsforce.github.io/document/#connection
+	config.store({ connection: { ...login } });
+	const identity = await connection.identity();
+	config.store({ instance: identity });
 
 
 	// * LOOKUP TABLES
@@ -47,8 +49,9 @@ export default async function salesforce(config, outStream) {
 
 	// * ROW COUNTS
 	emitter.emit('dwh query start', config);
+	let getRowCount;
 	try {
-		const getRowCount = await connection.query(query, { autoFetch: true, maxFetch: 1 });
+		getRowCount = await connection.query(query, { autoFetch: true, maxFetch: 1 });
 		config.store({ rows: getRowCount.totalSize });
 	}
 	catch (e) {
@@ -63,17 +66,42 @@ export default async function salesforce(config, outStream) {
 	const schemaLabels = objectMap(schema, scheme => scheme.label);
 	emitter.emit('dwh query end', config);
 
-	// * MODELING
-	if (config.type === "event") {
-		//events get unix epoch
-		config.timeTransform = (time) => { return dayjs(time).valueOf(); };
-	}
-	else {
-		//all others get ISO
-		config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
-	}
-	const mpModel = transformer(config, prettyLabels ? Object.values(dateFields).map(f => f.label) : Object.keys(dateFields));
+	// const idTransform = record => record
 
+	// $ check mappings to allow api field names or pretty labels in config if pretty labels are applied
+	if (getRowCount?.records) {
+		const testRecord = flatten(getRowCount.records.pop());
+		for (const mapping in config.mappings) {
+			const userInputMapping = config.mappings[mapping];
+			const prettyName = schemaLabels[userInputMapping];
+			
+			//user put in API name
+			if (testRecord[userInputMapping] && prettyName) {
+				if (prettyLabels) config.mappings[mapping] = prettyName				
+			}
+
+			//user put in pretty name
+			else if (testRecord[getKeyByValue(schemaLabels, userInputMapping)] && !prettyName) {
+				if (!prettyLabels) config.mappings[mapping] = getKeyByValue(schemaLabels, userInputMapping)
+			}
+
+			else if (testRecord[userInputMapping]) {
+				// noop
+			}
+
+			else {
+				if (config.verbose) u.cLog(`label "${config.mappings[mapping]}" not found in source data; "${mapping}" will be undefined in mixpanel`);
+			}
+		}
+	}
+
+	// * MODELING	
+	//events get unix epoch
+	config.eventTimeTransform = (time) => { return dayjs(time).valueOf(); };	
+	//all other get ISO
+	config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
+
+	const mpModel = transformer(config, prettyLabels ? Object.values(dateFields).map(f => f.label) : Object.keys(dateFields));
 
 	// * STREAMING QUERY
 	const sfdcStream = connection.query(query, { autoFetch: true, maxFetch: 100000000 });
@@ -83,11 +111,11 @@ export default async function salesforce(config, outStream) {
 			.once("record", () => {
 				emitter.emit('dwh stream start', config);
 			})
-			
+
 			.on("record", function (record) {
 				config.got();
-				const flatRecord = u.objFilter(flatten(record), k => !k.includes('attributes.'), 'key');
-				
+				let flatRecord = u.objFilter(flatten(record), k => !k.includes('attributes.'), 'key');			
+
 				//labeling
 				if (prettyLabels) {
 					const row = u.rnKeys(flatRecord, schemaLabels);
@@ -97,18 +125,18 @@ export default async function salesforce(config, outStream) {
 					outStream.push(mpModel(flatRecord));
 				}
 			})
-			
+
 			.on("end", function () {
 				emitter.emit('dwh stream end', config);
 				outStream.push(null);
 				connection.logout();
 				resolve(config);
 			})
-			
+
 			.on("error", function (err) {
 				reject(err);
 			})
-			
+
 			.run();
 
 	});
@@ -266,3 +294,8 @@ function objectMap(object, mapFn) {
 		return result;
 	}, {});
 }
+
+// ? https://stackoverflow.com/a/28191966
+function getKeyByValue(object, value) {
+	return Object.keys(object).find(key => object[key] === value);
+  }
