@@ -25,12 +25,13 @@ export default async function salesforce(config, outStream) {
 	}
 
 	// * AUTH
-	const { user, password, version, prettyLabels, renameId } = dwhAuth; //todo renameId???
+	const { user, password, version, prettyLabels, renameId, addUrls } = dwhAuth; //todo renameId???
 	const connection = new jsforce.Connection({ version });
 	const login = await connection.login(user, password);  // todo diff types of auth: https://jsforce.github.io/document/#connection
 	config.store({ connection: { ...login } });
 	const identity = await connection.identity();
 	config.store({ instance: identity });
+	const urlPrefix = `${identity.urls?.custom_domain}`;
 
 
 	// * LOOKUP TABLES
@@ -64,29 +65,30 @@ export default async function salesforce(config, outStream) {
 	config.store({ schema });
 	const dateFields = u.objFilter(schema, f => f.type.includes('date'));
 	const schemaLabels = objectMap(schema, scheme => scheme.label);
+	const primaryId = u.objFilter(schema, f => f.type === 'primary_identifier');
 	emitter.emit('dwh query end', config);
-
-	// const idTransform = record => record
 
 	// $ check mappings to allow api field names or pretty labels in config if pretty labels are applied
 	if (getRowCount?.records) {
 		const testRecord = flatten(getRowCount.records.pop());
-		for (const mapping in config.mappings) {
+		mapLoop: for (const mapping in config.mappings) {
+			if (mapping === "profileOperation") continue mapLoop;
 			const userInputMapping = config.mappings[mapping];
 			const prettyName = schemaLabels[userInputMapping];
-			
+
 			//user put in API name
 			if (testRecord[userInputMapping] && prettyName) {
-				if (prettyLabels) config.mappings[mapping] = prettyName				
+				if (prettyLabels) config.mappings[mapping] = prettyName;
+				if (renameId && mapping === 'distinct_id_col')  config.mappings[mapping] = prettyName;
 			}
-
+			
 			//user put in pretty name
 			else if (testRecord[getKeyByValue(schemaLabels, userInputMapping)] && !prettyName) {
-				if (!prettyLabels) config.mappings[mapping] = getKeyByValue(schemaLabels, userInputMapping)
+				if (!prettyLabels) config.mappings[mapping] = getKeyByValue(schemaLabels, userInputMapping);
 			}
 
 			else if (testRecord[userInputMapping]) {
-				// noop
+				// noop; it exists
 			}
 
 			else {
@@ -95,9 +97,10 @@ export default async function salesforce(config, outStream) {
 		}
 	}
 
+
 	// * MODELING	
 	//events get unix epoch
-	config.eventTimeTransform = (time) => { return dayjs(time).valueOf(); };	
+	config.eventTimeTransform = (time) => { return dayjs(time).valueOf(); };
 	//all other get ISO
 	config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
 
@@ -114,16 +117,18 @@ export default async function salesforce(config, outStream) {
 
 			.on("record", function (record) {
 				config.got();
-				let flatRecord = u.objFilter(flatten(record), k => !k.includes('attributes.'), 'key');			
+				let row = u.objFilter(flatten(record), k => !k.includes('attributes.'), 'key');
+				const idKey = Object.keys(primaryId)[0];
+				//sfdc urls
+				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey]}`;
 
 				//labeling
-				if (prettyLabels) {
-					const row = u.rnKeys(flatRecord, schemaLabels);
-					outStream.push(mpModel(row));
-				}
-				else {
-					outStream.push(mpModel(flatRecord));
-				}
+				if (prettyLabels) row = u.rnKeys(row, schemaLabels);
+
+				//primary id rename
+				if (renameId) row = u.rnKeys(row, { [idKey]: primaryId[idKey].label });
+
+				outStream.push(mpModel(row));
 			})
 
 			.on("end", function () {
@@ -216,8 +221,14 @@ async function getSchema(ast, connection, config) {
 				}
 
 				catch (e) {
-					// could not resolve pretty name for field... move on
-					fieldLabels[queryFieldName] = { label: queryFieldName, type: "string" };
+					// is it the primary object Id?
+					if (schemaFieldName === 'Id' && !queryFieldName) {
+						fieldLabels[queryFieldName || schemaFieldName] = { label: `${primarySObject}.${queryFieldName || schemaFieldName}`, type: "primary_identifier" };
+					}
+					else {
+						// could not resolve pretty name for field... move on
+						fieldLabels[queryFieldName || schemaFieldName] = { label: queryFieldName || schemaFieldName, type: "string" };
+					}
 				}
 
 			}
@@ -298,4 +309,4 @@ function objectMap(object, mapFn) {
 // ? https://stackoverflow.com/a/28191966
 function getKeyByValue(object, value) {
 	return Object.keys(object).find(key => object[key] === value);
-  }
+}
