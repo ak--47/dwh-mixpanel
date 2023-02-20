@@ -9,44 +9,38 @@ import dayjs from "dayjs";
 
 
 export default async function salesforce(config, outStream) {
-	// todo deal with primary id cols
-	// todo lookup tables
-	// todo resolving of doubly nested field names	i.e. Owner.UserRole.Name
-	// todo docs + final refactor
-	// todo tests... lots of 'em
+	// TODOs 
+	// % events (!!!)
+	// % resolving of doubly nested field names	i.e. Owner.UserRole.Name
+	// % docs
 
-	const { query, ...dwhAuth } = config.dwhAuth();
+	// * AST
 	let ast;
 	try {
-		ast = sqlParse.parseQuery(query);
+		ast = sqlParse.parseQuery(config.sql);
 		config.store({ sqlAnalysis: ast });
+
+		// $ name resolution unavailable w/FIELDS(ALL)
+		if (isUsingFieldsAll(ast)) {
+			config.auth.resolve_field_names = false;
+			config.auth.rename_primary_id = false;
+			// config.auth.add_sfdc_links = false
+			if (config.verbose) u.cLog('\n\tappears as FIELDS(ALL) query; schema resolution is turned off');
+		}
 	} catch (e) {
 		if (config.verbose) u.cLog("\ncould not parse SOQL query to AST...\n\tfield label resolution won't work (but the data can still be sent!)\n");
 	}
 
-	// * AUTH
-	const { user, password, version, prettyLabels, renameId, addUrls } = dwhAuth; //todo renameId???
+	// * AUTH & OPTIONS
+	const { query, ...dwhAuth } = config.dwhAuth();
+	const { user, password, version, prettyLabels, renameId, addUrls } = dwhAuth; // $ options
+
 	const connection = new jsforce.Connection({ version });
-	const login = await connection.login(user, password);  // todo diff types of auth: https://jsforce.github.io/document/#connection
+	const login = await connection.login(user, password);  // ? other auth: https://jsforce.github.io/document/#connection
 	config.store({ connection: { ...login } });
 	const identity = await connection.identity();
 	config.store({ instance: identity });
 	const urlPrefix = `${identity.urls?.custom_domain}`;
-
-
-	// * LOOKUP TABLES
-	if (config.type === 'table') {
-		// !! todo 
-		// emitter.emit('dwh query start', config);
-		// const { recordset, rowsAffected } = await (new mssql.Request(pool)).query(query);
-		// emitter.emit('dwh query end', config);
-		// config.store({ rows: rowsAffected[0] });
-		// config.store({ schema: recordset.columns });
-		// const mpModel = transformer(config, []);
-		// const transformedRows = recordset.map(mpModel);
-		// const csv = csvMaker(transformedRows);
-		// return csv;
-	}
 
 	// * ROW COUNTS
 	emitter.emit('dwh query start', config);
@@ -63,48 +57,44 @@ export default async function salesforce(config, outStream) {
 	// * METADATA + SCHEMA RESOLUTION
 	const schema = await getSchema(ast, connection, config);
 	config.store({ schema });
+	config.store({ apiLimits: { limit: connection.limitInfo.apiUsage.limit, used: connection.limitInfo.apiUsage.used } });
+
 	const dateFields = u.objFilter(schema, f => f.type.includes('date'));
 	const schemaLabels = objectMap(schema, scheme => scheme.label);
 	const primaryId = u.objFilter(schema, f => f.type === 'primary_identifier');
+
+	confirmMappings(config, getRowCount, schemaLabels, prettyLabels, renameId);
 	emitter.emit('dwh query end', config);
 
-	// $ check mappings to allow api field names or pretty labels in config if pretty labels are applied
-	if (getRowCount?.records) {
-		const testRecord = flatten(getRowCount.records.pop());
-		mapLoop: for (const mapping in config.mappings) {
-			if (mapping === "profileOperation") continue mapLoop;
-			const userInputMapping = config.mappings[mapping];
-			const prettyName = schemaLabels[userInputMapping];
-
-			//user put in API name
-			if (testRecord[userInputMapping] && prettyName) {
-				if (prettyLabels) config.mappings[mapping] = prettyName;
-				if (renameId && mapping === 'distinct_id_col')  config.mappings[mapping] = prettyName;
-			}
-			
-			//user put in pretty name
-			else if (testRecord[getKeyByValue(schemaLabels, userInputMapping)] && !prettyName) {
-				if (!prettyLabels) config.mappings[mapping] = getKeyByValue(schemaLabels, userInputMapping);
-			}
-
-			else if (testRecord[userInputMapping]) {
-				// noop; it exists
-			}
-
-			else {
-				if (config.verbose) u.cLog(`label "${config.mappings[mapping]}" not found in source data; "${mapping}" will be undefined in mixpanel`);
-			}
-		}
-	}
-
-
 	// * MODELING	
-	//events get unix epoch
 	config.eventTimeTransform = (time) => { return dayjs(time).valueOf(); };
-	//all other get ISO
 	config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
-
 	const mpModel = transformer(config, prettyLabels ? Object.values(dateFields).map(f => f.label) : Object.keys(dateFields));
+
+	// * LOOKUP TABLES
+	if (config.type === 'table') {
+		const { records } = await connection.query(query, { autoFetch: true, maxFetch: 100000000 }); // max size is 2000
+		const idKey = Object.keys(primaryId)[0];
+
+		const cleanUpSalesforce = records
+			.map((record) => {
+				return u.objFilter(flatten(record), k => !k.includes('attributes.'), 'key');
+			})
+			.map((row) => {
+				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey || 'Id']}`;
+				if (prettyLabels) row = u.rnKeys(row, schemaLabels);
+				if (renameId) row = u.rnKeys(row, { [idKey]: primaryId[idKey].label });
+				return row;
+			});
+
+		// want pretty labels but they used the API label
+		if (prettyLabels && !cleanUpSalesforce[0][config.mappings.lookup_col]) config.mappings.lookup_col = schemaLabels[config.mappings.lookup_col];
+
+		const mpModel = transformer(config, dateFields);
+		const transformedRows = cleanUpSalesforce.map(mpModel);
+		const csv = csvMaker(transformedRows);
+		return csv;
+	}
 
 	// * STREAMING QUERY
 	const sfdcStream = connection.query(query, { autoFetch: true, maxFetch: 100000000 });
@@ -120,7 +110,7 @@ export default async function salesforce(config, outStream) {
 				let row = u.objFilter(flatten(record), k => !k.includes('attributes.'), 'key');
 				const idKey = Object.keys(primaryId)[0];
 				//sfdc urls
-				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey]}`;
+				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey || 'Id']}`;
 
 				//labeling
 				if (prettyLabels) row = u.rnKeys(row, schemaLabels);
@@ -143,7 +133,6 @@ export default async function salesforce(config, outStream) {
 			})
 
 			.run();
-
 	});
 }
 
@@ -154,7 +143,7 @@ async function getSchema(ast, connection, config) {
 	const fieldLabels = {};
 	if (ast) {
 		try {
-			const { sObject: primarySObject, fields: queryFields } = ast;
+			let { sObject: primarySObject, fields: queryFields } = ast;
 
 			// get all relationship fields
 			const relationships = u.dedupe(
@@ -230,11 +219,9 @@ async function getSchema(ast, connection, config) {
 						fieldLabels[queryFieldName || schemaFieldName] = { label: queryFieldName || schemaFieldName, type: "string" };
 					}
 				}
-
 			}
 
 			return fieldLabels;
-
 		}
 
 		catch (e) {
@@ -265,6 +252,37 @@ async function queryForFields(conn, objectType) {
 
 };
 
+function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameId) {
+	// $ check mappings to allow api field names or pretty labels in config if pretty labels are applied
+	if (testResult?.records) {
+		const testRecord = flatten(testResult.records.pop());
+		mapLoop: for (const mapping in config.mappings) {
+			if (mapping === "profileOperation") continue mapLoop;
+			const userInputMapping = config.mappings[mapping];
+			const prettyName = schemaLabels[userInputMapping];
+
+			//user put in API name
+			if (testRecord[userInputMapping] && prettyName) {
+				if (prettyLabels) config.mappings[mapping] = prettyName;
+				if (renameId && mapping === 'distinct_id_col') config.mappings[mapping] = prettyName;
+			}
+
+			//user put in pretty name
+			else if (testRecord[getKeyByValue(schemaLabels, userInputMapping)] && !prettyName) {
+				if (!prettyLabels) config.mappings[mapping] = getKeyByValue(schemaLabels, userInputMapping);
+			}
+
+			else if (testRecord[userInputMapping]) {
+				// noop; it exists
+			}
+
+			else {
+				if (config.verbose) u.cLog(`label "${config.mappings[mapping]}" not found in source data; "${mapping}" will be undefined in mixpanel`);
+			}
+		}
+	}
+}
+
 function getFields(schema) {
 	const fields = schema.fields.map((meta) => {
 		return {
@@ -277,6 +295,16 @@ function getFields(schema) {
 		};
 	});
 	return fields.filter(f => f.type !== "id");
+}
+
+function isUsingFieldsAll(ast) {
+	const functionFieldCount = ast.fields.filter(f => f.type === 'FieldFunctionExpression').length > 0;
+	const isTheAllThing = true;
+	if (functionFieldCount > 0 && isTheAllThing) {
+		return true;
+	}
+	
+	return false;
 }
 
 

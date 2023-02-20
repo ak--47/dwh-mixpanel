@@ -290,7 +290,7 @@ export default class dwhConfig {
 				query: this.sql,
 				user: this.auth.user,
 				password: this.auth.password,
-				version: this.auth.version?.toString() || "49.0",
+				version: this.auth.version?.toString() || "51.0",
 				prettyLabels: u.isNil(this.auth.resolve_field_names) ? true : this.auth.resolve_field_names,
 				renameId: u.isNil(this.auth.rename_primary_id) ? true : this.auth.rename_primary_id,
 				addUrls: u.isNil(this.auth.add_sfdc_links) ? true : this.auth.add_sfdc_links

@@ -1,6 +1,7 @@
 {
 	"jest.jestCommandLine": "npm run test --",
 	"jest.autoRun": "off",
+	"jest.monitorLongRun": "off",
 	"files.exclude": {
 		"**/node_modules": true
 	},
