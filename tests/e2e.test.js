@@ -29,9 +29,10 @@ const azureGroups = require('../environments/azure/groups.json');
 const azureTables = require('../environments/azure/tables.json');
 
 const salesforceGroups = require('../environments/salesforce/groups.json');
-const salesforceEvents = require('../environments/salesforce/events.json');
+const salesforceEventsHistory = require('../environments/salesforce/eventsHistories.json');
 const salesforceUsers = require('../environments/salesforce/users.json');
 const salesforceTables = require('../environments/salesforce/tables.json');
+const salesforceEventsFlat = require('../environments/salesforce/eventsFlat.json');
 
 const opts = {
 	options: {
@@ -267,7 +268,7 @@ describe('azure', () => {
 
 describe('salesforce', () => {
 	test('events (oppFieldHistory)', async () => {
-		const { mixpanel, salesforce, time } = await main({ ...salesforceEvents, ...opts });
+		const { mixpanel, salesforce, time } = await main({ ...salesforceEventsHistory, ...opts });
 		expect(mixpanel.success).toBe(4029);
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(3);
@@ -275,6 +276,17 @@ describe('salesforce', () => {
 		expect(salesforce.sObject).toBe('OpportunityFieldHistory');
 
 	}, timeout);
+
+	test('events (flat)', async () => {
+		const { mixpanel, salesforce, time } = await main({ ...salesforceEventsFlat, ...opts });
+		expect(mixpanel.success).toBe(19451);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(10);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(salesforce.sObject).toBe('Task');
+
+	}, timeout);
+
 
 	test('users w/fields(all)', async () => {
 		const { mixpanel, salesforce, time } = await main({ ...salesforceUsers, ...opts });

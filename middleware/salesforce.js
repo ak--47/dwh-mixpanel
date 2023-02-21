@@ -10,8 +10,6 @@ import dayjs from "dayjs";
 
 export default async function salesforce(config, outStream) {
 	// TODOs 
-	// % events (!!!)
-	// % resolving of doubly nested field names	i.e. Owner.UserRole.Name
 	// % docs
 
 	// * AST
@@ -138,7 +136,7 @@ export default async function salesforce(config, outStream) {
 				//sfdc urls
 				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey || 'Id']}`;
 
-				//todo: this be weird for events labeling
+				//pretty labels
 				if (prettyLabels) row = u.rnKeys(row, schemaLabels);
 
 				//primary id rename
@@ -165,8 +163,8 @@ export default async function salesforce(config, outStream) {
 
 // HELPERS
 async function getSchema(ast, connection, config) {
-	// !! todo... this is currently limited to ONE level of depth; Owner.Name is fine, but Owner.UserRole.Name will not resolve...
-	// !! todo... schema labels should be unique (not overwrite other schema labels; Who.Name + What.Name should not both resolve to "Full Name")
+	// $ note... this is currently limited to ONE level of depth; 
+	// $ Owner.Name is fine, but Owner.UserRole.Name will not resolve...
 	const fieldLabels = {};
 	if (ast) {
 		try {
@@ -231,17 +229,36 @@ async function getSchema(ast, connection, config) {
 			for (const queryField of queryFields) {
 				const { rawValue: queryFieldName, field: schemaFieldName, relationships } = queryField;
 				try {
+					//don't resolve name, id, and other common fields across many objects
+					if (queryFieldName?.includes(".Name")) throw 'name field';
+					if (queryFieldName?.includes(".Id")) throw 'id field';
+					if (queryFieldName?.includes(".SobjectType")) throw 'sobject field';
+					if (schemaFieldName === "Name") throw 'name field';
+					if (schemaFieldName === "Id") throw 'id field';
+					if (schemaFieldName === "SobjectType") throw 'sobject field';
 
 					//related fields
 					if (Array.isArray(relationships)) {
 						const foundField = allSchemas[relationships.slice().pop()].find(desc => desc.apiName === schemaFieldName);
-						fieldLabels[queryFieldName] = { label: foundField.label, type: foundField.type };
+						//don't overwrite
+						if (Object.keys(u.objFilter(fieldLabels, (s) => s.label === schemaFieldName)).length) {
+							throw "exists";
+						}
+						else {
+							fieldLabels[queryFieldName] = { label: foundField.label, type: foundField.type };
+						}
 					}
 
 					//normal fields
 					else {
 						const foundField = allSchemas[primarySObject].find(desc => desc.apiName === schemaFieldName);
-						fieldLabels[schemaFieldName] = { label: foundField.label, type: foundField.type };
+						//don't overwrite
+						if (Object.keys(u.objFilter(fieldLabels, (s) => s.label === schemaFieldName)).length) {
+							throw "exists";
+						}
+						else {
+							fieldLabels[schemaFieldName] = { label: foundField.label, type: foundField.type };
+						}
 					}
 				}
 
@@ -367,8 +384,8 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 		if (isHistoryQuery) {
 			config.mappings.insert_id_col = '$insert_id';
 			config.mappings.time_col = 'CreatedDate';
-		} 
-		
+		}
+
 	}
 }
 

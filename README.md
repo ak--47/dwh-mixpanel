@@ -663,11 +663,11 @@ would (likely) use the following mappings:
 
 this will produce group profiles for every account with the right filed mappings for `Owner`, `ARR`, and `Monthly Spend`
 
-###### events
+###### events: field history
 
-modeling **events** from salesforce in mixpanel is a bit different; only [field history objects](https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_opportunityfieldhistory.htm) are supported.
+modeling **events** from salesforce in mixpanel is a bit different; _typically_ what you will want to model as events are [field history objects](https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_opportunityfieldhistory.htm). these are the "change tables" that describe when an object is created, or when it's field value change (i.e. an `Opportunity` changing `Stage`).
 
-**every SOQL query modeling events must contain the fields**: `Field, NewValue, OldValue, CreatedDate` 
+**every SOQL query modeling history must contain the fields**: `Field, NewValue, OldValue, CreatedDate` 
 
 these fields are used to determine the **event name**, **event time**, and **$insert_id**.
 
@@ -688,14 +688,14 @@ FROM
 
 and we might use the following mapping:
 
-```
+```javascript
 {
     dwh: "salesforce",
     mappings: {
-		"event_name_col": "", // ignored!
-		"insert_id_col": "", // ignored!
-		"time_col": "",	// ignored!
-		"distinct_id_col": "Opportunity.Id", //important!
+		event_name_col: "", // ignored!
+		insert_id_col: "", // ignored!
+		time_col: "",	// ignored!
+		distinct_id_col: "Opportunity.Id", //important!
 
     },
 	mixpanel: {
@@ -705,7 +705,43 @@ and we might use the following mapping:
 ```
 this would model all field changes to any opportunities as events in mixpanel, using the opportunity's `Id` as the `distinct_id` in mixpanel.
 
-note: [nested SOQL subqueries](https://developer.salesforce.com/forums/?id=906F00000008yH8IAI) are not currently supported
+###### events: field history
+
+for **non-history** queries which model events like:
+
+```SQL
+-- modeling Tasks object as events
+SELECT 
+	Id, Who.Id, Who.Name, Who.RecordType.SobjectType, 
+	What.Id, What.Name, What.RecordType.SobjectType, 
+	AccountId, CreatedDate, CreatedBy.Id, CreatedBy.Name
+FROM
+	Task
+WHERE
+	LastModifiedDate = Today
+	AND
+	Who.Id != null
+```
+you *will need* supply the `time_col`, `insert_id_col`, and `distinct_id_col`:
+
+```javascript
+{
+    dwh: "salesforce",
+    mappings: {
+		event_name_col: "", // ignored!
+		insert_id_col: "Id", 
+		time_col: "CreatedDate",	
+		distinct_id_col: "Who.Id", //important!
+
+    },
+	mixpanel: {
+		type : "event"
+	}
+}
+```
+event names will be created automatically based on the `sObject` that is being queried (in this case `task`).
+
+note: [nested SOQL subqueries](https://developer.salesforce.com/forums/?id=906F00000008yH8IAI) are not currently supported for salesforce rETLs.
 
 
 <div id="env"></div>
