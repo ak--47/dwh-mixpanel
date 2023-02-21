@@ -33,8 +33,16 @@ export default async function salesforce(config, outStream) {
 		if (hasSubqueries) {
 			u.cLog(hasSubqueries, `\nSubqueries (with nested objects) are not currently support by this module... please flatten your table an try again:`, 'ERROR');
 			process.exit(0);
-
 		}
+
+		// $ history queries are treated differently
+		if (config.type === 'event') {
+			config.store({ fieldHistoryQuery: isFieldHistoryQuery(ast) });
+		}
+		else {
+			config.store({ fieldHistoryQuery: false });
+		};
+
 	} catch (e) {
 		if (config.verbose) u.cLog("\ncould not parse SOQL query to AST...\n\tfield label resolution won't work (but the data can still be sent!)\n");
 	}
@@ -72,8 +80,9 @@ export default async function salesforce(config, outStream) {
 	const primaryId = u.objFilter(schema, f => f.type === 'primary_identifier');
 	const sObject = config.dwhStore.sObject;
 	const sObjectsSchemas = config.dwhStore.sObjectsSchemas;
+	const isHistoryQuery = config.dwhStore.fieldHistoryQuery;
 
-	confirmMappings(config, getRowCount, schemaLabels, prettyLabels, renameId);
+	confirmMappings(config, getRowCount, schemaLabels, prettyLabels, renameId, isHistoryQuery);
 	emitter.emit('dwh query end', config);
 
 	// * MODELING	
@@ -122,14 +131,14 @@ export default async function salesforce(config, outStream) {
 
 				// events get special treatment
 				if (config.type === 'event') {
-					buildEvName(row, sObject, sObjectsSchemas, prettyLabels);
-					addInsert(row, sObject);
+					buildEvName(row, sObject, sObjectsSchemas, prettyLabels, isHistoryQuery);
+					addInsert(row, sObject, isHistoryQuery);
 				}
 
 				//sfdc urls
 				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey || 'Id']}`;
 
-				//labeling
+				//todo: this be weird for events labeling
 				if (prettyLabels) row = u.rnKeys(row, schemaLabels);
 
 				//primary id rename
@@ -157,6 +166,7 @@ export default async function salesforce(config, outStream) {
 // HELPERS
 async function getSchema(ast, connection, config) {
 	// !! todo... this is currently limited to ONE level of depth; Owner.Name is fine, but Owner.UserRole.Name will not resolve...
+	// !! todo... schema labels should be unique (not overwrite other schema labels; Who.Name + What.Name should not both resolve to "Full Name")
 	const fieldLabels = {};
 	if (ast) {
 		try {
@@ -278,7 +288,14 @@ async function queryForFields(conn, objectType) {
 
 };
 
-function buildEvName(row, sObject, schemas, prettyLabels) {
+function buildEvName(row, sObject, schemas, prettyLabels, isHistoryQuery) {
+	// non history queries get sObject names
+	if (!isHistoryQuery) {
+		row.constructedEventName = u.multiReplace(sObject.toLowerCase(), [["history", ""], ["field", ""], ["__c", ""], ["__", ""]]);
+		return row;
+	}
+
+	// field history queries get constructed names
 	const { Field: apiField, NewValue, OldValue } = row;
 	let field = ``;
 	let action = ``;
@@ -303,7 +320,10 @@ function buildEvName(row, sObject, schemas, prettyLabels) {
 }
 
 // ? because https://bit.ly/3IBTj3M
-function addInsert(row, sObject) {
+function addInsert(row, sObject, isHistoryQuery) {
+	if (!isHistoryQuery) {
+		return row;
+	}
 	const { Field: apiField, NewValue: current, OldValue: old, CreatedDate: when, CreatedById: who } = row;
 	const deDuple = { apiField, current, old, when, who, sObject };
 	row.$insert_id = u.md5(JSON.stringify(deDuple));
@@ -311,7 +331,7 @@ function addInsert(row, sObject) {
 }
 
 // ! mutate the config to make it work with the schema
-function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameId) {
+function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameId, isHistoryQuery) {
 	// $ check mappings to allow api field names or pretty labels in config if pretty labels are applied
 	if (testResult?.records) {
 		const testRecord = flatten(testResult.records.pop());
@@ -344,8 +364,11 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 
 	if (config.type === 'event') {
 		config.mappings.event_name_col = 'constructedEventName';
-		config.mappings.insert_id_col = '$insert_id';
-		config.mappings.time_col = 'CreatedDate';
+		if (isHistoryQuery) {
+			config.mappings.insert_id_col = '$insert_id';
+			config.mappings.time_col = 'CreatedDate';
+		} 
+		
 	}
 }
 
@@ -374,6 +397,9 @@ function isUsingFieldsAll(ast) {
 	return false;
 }
 
+function isFieldHistoryQuery(ast) {
+	return ast?.sObject?.toLowerCase()?.includes('history');
+}
 
 function isUsingSubqueries(ast) {
 	const subQuery = ast.fields.filter(f => f.subquery);
