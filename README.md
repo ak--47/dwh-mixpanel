@@ -10,6 +10,7 @@ Supported Data Warehouses:
 - [AWS Athena](#athena)
 - [Snowflake](#snowflake)
 - [Microsoft Azure SQL](#azure)
+- [Salesforce](#salesforce)
 
 <div id="tldr"></div>
 
@@ -111,7 +112,7 @@ const myConfig = {
 const bqToMpSummary = await dwhMp(myConfig);
 ```
 
-the module returns a `summary` of the unload/load job, with statistics and logs about how many records were processed, throughput, and metadata from the warehouse.
+the module returns a `summary` of the entire pipeline, with statistics and logs about how many records were processed, throughput, and metadata from the warehouse.
 
 ```javascript
 {
@@ -214,7 +215,7 @@ providing mappings is not a tedious task; mixpanel is a schemaless tool designed
 
 the fields you must provide mappings for depend on the type of data you're importing:
 
-**events** mappings
+**event mappings**:
 
 ```javascript
 {
@@ -229,7 +230,7 @@ the fields you must provide mappings for depend on the type of data you're impor
 
 note: `insert_id_col` is **required** when using `strict` mode
 
-**user or group profiles** mappings
+**user or group profiles mappings**:
 
 ```javascript
 {
@@ -250,7 +251,7 @@ note: `insert_id_col` is **required** when using `strict` mode
 }
 ```
 
-**lookup tables** mappings
+**lookup tables mappings**:
 
 ```javascript
 {
@@ -417,7 +418,7 @@ the service account will need the following permissions in bigquery AND on the s
 - [`bigquery.jobs.create`](<https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=Run%20jobs%20(including%20queries)%20within%20the%20project.>)
 - [`bigquery.jobs.get`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=Get%20data%20and%20metadata%20on%20any%20job.1)
 - [`bigquery.datasets.get`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=Get%20metadata%20about%20a%20dataset.)
-- [`bigquery.tables.get	`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=out%20of%20BigQuery.-,bigquery.tables.get,-Get%20table%20metadata)
+- [`bigquery.tables.get`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=out%20of%20BigQuery.-,bigquery.tables.get,-Get%20table%20metadata)
 - [`bigquery.tables.getData`](https://cloud.google.com/bigquery/docs/access-control#bigquery.dataViewer:~:text=Get%20table%20data.%20This%20permission%20is%20required%20for%20querying%20table%20data.%0ATo%20get%20table%20metadata%2C%20you%20need%20bigquery.tables.get.)
 
 in my experience, the `data viewer` + `bigquery job user` roles set together satisfies these cases; if a required permission is missing, the output will tell you what it is.
@@ -529,9 +530,9 @@ most AWS accounts can be [setup for programmatic access](https://docs.aws.amazon
 
 ##### Azure
 
-Azure SQL (managed + on premise) Servers use usernames and passwords for authentication; there are no special permissions required... the user you authenticate as should have permissions to run the query.
+Azure SQL (managed + on premise) servers use usernames and passwords for authentication; there are no special permissions required... the user you authenticate as should have permissions to run the query.
 
-there are two common patterns for entering credentials, **connection strings** and **structured objects** ... they are essentially the same thing in different formats:
+there are two common patterns for entering credentials, **connection strings** and **JSON** ... they are essentially the same thing in different formats:
 
 - **connection string**
 a connection string is a long string which contains username, password, database, port and some other options to establish a secure connection with your database. they look like this:
@@ -560,7 +561,7 @@ make sure to choose the right connection string version that is supported by you
 
 - **JSON**
 
-if you wish, you may also pass your credentials as JSON; the parameters are very similar look like this:
+if you wish, you may also pass your credentials as JSON; the parameters are very similar to what's encoded in the connection string. they look like this:
 
 ```javascript
 {
@@ -576,6 +577,135 @@ if you wish, you may also pass your credentials as JSON; the parameters are very
 }
 ```
 you can also pass other pool configuration options to the `auth` object... [see the full list of params](https://github.com/tediousjs/node-mssql#general-same-for-all-drivers)
+
+
+<div id="salesforce"></div>
+
+##### salesforce
+
+while salesforce may not typically be thought of as a "data warehouse" (great for transactions; not so great for analysis), **it can be queried with SQL** (actually [SOQL](https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql.htm) which is a salesforce variant of SQL). salesforce has a [REST API](https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_rest.htm) and robust [client library](https://jsforce.github.io/).
+
+therefore, you can model events, profiles, groups or lookup tables as SOQL queries, and pipe them directly to mixpanel! 
+
+the [data model for salesforce](https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/data_model.htm) is quite unique, and therefore this module works _differently_ when interfacing with salesforce.
+
+auth is simple; you need only add your `username` and `password` into the `auth` object:
+
+```javascript
+{
+    dwh: "salesforce",
+    auth: {
+		user: "",
+		password: "", // your password + security token
+		version: "51.0" // API version to use; 51 is default
+    }
+}
+```
+`dwh-mixpanel` uses salesforce's [SOAP login API](https://developer.salesforce.com/docs/atlas.en-us.242.0.api.meta/api/sforce_api_calls_login.htm#:~:text=To%20log%20in%2C%20the%20user%20must%20add%20the%20security%20token%20at%20the%20end%20of%20the%20user%E2%80%99s%20password.%20For%20example%2C%20if%20a%20user%27s%20password%20is%20mypassword%20and%20the%20security%20token%20is%20XXXXXXXXXX%2C%20the%20user%20enters%20mypasswordXXXXXXXXXX.) for authentication... this means your `password` is your normal salesforce password with a concatenated [security token](https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_concepts_security.htm). if your UI password was: `foo` and your security token was `bar-bazqux` your API password is `foobar-bazqux`
+
+if you do not have a security token, [here are the steps to reset it](https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_concepts_security.htm)
+
+this module also provides a few **additional options** for transforming salesforce records into usable mixpanel entities; these options are all **turned on by default** and can be changed in the `auth` section if the [configuration file](#config) if desired:
+
+
+```javascript
+{
+    dwh: "salesforce",
+    auth: {
+		user, password,
+		"resolve_field_names": true, // "Renewal_Date__c" → "Contract Renewal Date"
+		"rename_primary_id" : true, // "Id" → "Account.Id"
+		"add_sfdc_links": true // add salesforce URLs to all records
+    }
+}
+```
+- `resolve_field_names`
+the salesforce API uses API field names; these field names tend to be less human readable than the labels users see in the salesforce UI; with this option, `dwh-mixpanel` will query your salesforce instance's schema to turn the api labels (`Renewal_Date__c`) into "pretty labels" which will be used in mixpanel (`Contract Renewal Date`)
+<br/>
+- `rename_primary_id`
+many SOQL queries start with `SELECT Id ... FROM sObject`; because SOQL does not allow aliasing (`as`), having a generic `Id` column can be a pain-point when joining records from different objects. this option will turn the `Id` column header into `sObject.Id`; you can still reference it as `sObject.Id` or `Id` in your configuration file's mappings.
+<br/>
+- `add_sfdc_links`
+this option adds a constructed URL to the salesforce object, so you can easily jump from mixpanel to salesforce in one click!
+
+###### profiles + tables
+
+for **user profiles, group profiles,** and **lookup tables**, most valid SOQL queries will work as long as you provide the requisite mappings. relationship fields and custom fields are just fine!
+
+for example:
+
+```SQL
+SELECT
+	Account.Id,
+	Account.Name,
+	Account.Owner.Name, -- relationships
+	Account.ARR__c
+	Account.plan_type__c.monthly_spend__c -- custom fields
+FROM 
+	Account
+```
+would (likely) use the following mappings:
+
+```
+{
+    dwh: "salesforce",
+    mappings: {
+		"distinct_id_col": "Account.Id",
+		"name_col": "Account.Name",
+		"email_col": "Account.Owner.Name",		
+    },
+	mixpanel: {
+		type : "group",
+		groupKey: "Account.Id" //important!
+	}
+}
+```
+
+this will produce group profiles for every account with the right filed mappings for `Owner`, `ARR`, and `Monthly Spend`
+
+###### events
+
+modeling **events** from salesforce in mixpanel is a bit different; only [field history objects](https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_opportunityfieldhistory.htm) are supported.
+
+**every SOQL query modeling events must contain the fields**: `Field, NewValue, OldValue, CreatedDate` 
+
+these fields are used to determine the **event name**, **event time**, and **$insert_id**.
+
+therefore, any mappings supplied to `event_name_col`, `time_col`, or `insert_id_col` **will be ignored** 
+
+you **will** need to supply a mapping for `distinct_id_col` (usually the `Id` of the primary object being queried)
+
+for example, we might query the `OpportunityFieldHistory` to get events for each "field change" on each opportunity:
+
+```SQL
+SELECT 
+	Id, DataType, Field, NewValue, OldValue, CreatedDate, 
+	Opportunity.Id, Opportunity.Name, Opportunity.Amount, 
+	Opportunity.Owner.Name, Opportunity.Account.Name	
+FROM 
+	OpportunityFieldHistory
+```
+
+and we might use the following mapping:
+
+```
+{
+    dwh: "salesforce",
+    mappings: {
+		"event_name_col": "", // ignored!
+		"insert_id_col": "", // ignored!
+		"time_col": "",	// ignored!
+		"distinct_id_col": "Opportunity.Id", //important!
+
+    },
+	mixpanel: {
+		type : "event"
+	}
+}
+```
+this would model all field changes to any opportunities as events in mixpanel, using the opportunity's `Id` as the `distinct_id` in mixpanel.
+
+note: [nested SOQL subqueries](https://developer.salesforce.com/forums/?id=906F00000008yH8IAI) are not currently supported
 
 
 <div id="env"></div>

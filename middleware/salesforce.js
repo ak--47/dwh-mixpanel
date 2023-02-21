@@ -344,9 +344,11 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 
 	if (config.type === 'event') {
 		config.mappings.event_name_col = 'constructedEventName';
-		config.mappings.insert_id_col = '$insert_id'
+		config.mappings.insert_id_col = '$insert_id';
+		config.mappings.time_col = 'CreatedDate';
 	}
 }
+
 
 function getFields(schema) {
 	const fields = schema.fields.map((meta) => {
