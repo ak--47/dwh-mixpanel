@@ -4,8 +4,7 @@ export default function modelTable(row, mappings, lookupTableId, timeFields = []
 	const { lookup_col } = mappings;
 
 	if (!row[lookup_col]) {
-		u.cLog(`lookup table row is missing lookup key: ${lookup_col}`)
-		u.cLog(row)		
+		u.cLog(row, `lookup table row is missing lookup key: ${lookup_col}`, )	
 	}
 
 	// time transforms

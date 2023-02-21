@@ -266,16 +266,15 @@ describe('azure', () => {
 });
 
 describe('salesforce', () => {
-	// test('events', async () => {
-	// 	const { mixpanel, salesforce, time } = await main({ ...salesforceEvents, ...opts });
-	// 	expect(mixpanel.success).toBe(5000);
-	// 	expect(mixpanel.duration).toBeGreaterThan(0);
-	// 	expect(mixpanel.responses.length).toBe(3);
-	// 	expect(mixpanel.errors.length).toBe(0);
-	// 	expect(salesforce.job).toBeTruthy();
-	// 	expect(salesforce.schema).toBeTruthy();
+	test('events (oppFieldHistory)', async () => {
+		const { mixpanel, salesforce, time } = await main({ ...salesforceEvents, ...opts });
+		expect(mixpanel.success).toBe(4029);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(3);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(salesforce.sObject).toBe('OpportunityFieldHistory');
 
-	// }, timeout);
+	}, timeout);
 
 	test('users w/fields(all)', async () => {
 		const { mixpanel, salesforce, time } = await main({ ...salesforceUsers, ...opts });

@@ -27,6 +27,14 @@ export default async function salesforce(config, outStream) {
 			// config.auth.add_sfdc_links = false
 			if (config.verbose) u.cLog('\n\tappears as FIELDS(ALL) query; schema resolution is turned off');
 		}
+
+		// $ subqueries are not supported
+		const hasSubqueries = isUsingSubqueries(ast);
+		if (hasSubqueries) {
+			u.cLog(hasSubqueries, `\nSubqueries (with nested objects) are not currently support by this module... please flatten your table an try again:`, 'ERROR');
+			process.exit(0);
+
+		}
 	} catch (e) {
 		if (config.verbose) u.cLog("\ncould not parse SOQL query to AST...\n\tfield label resolution won't work (but the data can still be sent!)\n");
 	}
@@ -62,6 +70,8 @@ export default async function salesforce(config, outStream) {
 	const dateFields = u.objFilter(schema, f => f.type.includes('date'));
 	const schemaLabels = objectMap(schema, scheme => scheme.label);
 	const primaryId = u.objFilter(schema, f => f.type === 'primary_identifier');
+	const sObject = config.dwhStore.sObject;
+	const sObjectsSchemas = config.dwhStore.sObjectsSchemas;
 
 	confirmMappings(config, getRowCount, schemaLabels, prettyLabels, renameId);
 	emitter.emit('dwh query end', config);
@@ -109,6 +119,13 @@ export default async function salesforce(config, outStream) {
 				config.got();
 				let row = u.objFilter(flatten(record), k => !k.includes('attributes.'), 'key');
 				const idKey = Object.keys(primaryId)[0];
+
+				// events get special treatment
+				if (config.type === 'event') {
+					buildEvName(row, sObject, sObjectsSchemas, prettyLabels);
+					addInsert(row, sObject);
+				}
+
 				//sfdc urls
 				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey || 'Id']}`;
 
@@ -144,7 +161,7 @@ async function getSchema(ast, connection, config) {
 	if (ast) {
 		try {
 			let { sObject: primarySObject, fields: queryFields } = ast;
-
+			config.store({ sObject: primarySObject });
 			// get all relationship fields
 			const relationships = u.dedupe(
 				queryFields.filter(field => Array.isArray(field.relationships))
@@ -154,6 +171,7 @@ async function getSchema(ast, connection, config) {
 
 			// get the primary object's metadata ... e.x. "FROM OPPORTUNITY"
 			const primSObjectSchema = await connection.sobject(primarySObject).describe();
+
 
 			// resolve references in query to actual names of related sObjects ... Owner => User
 			const references = primSObjectSchema.fields
@@ -190,6 +208,14 @@ async function getSchema(ast, connection, config) {
 				}
 			}
 			allSchemas[primarySObject] = getFields(primSObjectSchema);
+
+			//stash all found fields in the config
+			const sObjectsSchemas = [];
+			for (const key in allSchemas) {
+				for (const scheme of allSchemas[key])
+					sObjectsSchemas.push(scheme);
+			}
+			config.store({ sObjectsSchemas });
 
 			//populate field labels by searching for each in the hashmap
 			for (const queryField of queryFields) {
@@ -252,6 +278,39 @@ async function queryForFields(conn, objectType) {
 
 };
 
+function buildEvName(row, sObject, schemas, prettyLabels) {
+	const { Field: apiField, NewValue, OldValue } = row;
+	let field = ``;
+	let action = ``;
+	let object = u.multiReplace(sObject.toLowerCase(), [["history", ""], ["field", ""], ["__c", ""], ["__", ""]]);
+
+	// actions states
+	if (u.isNil(NewValue) && u.isNil(OldValue) && apiField === 'created') action = 'created';
+	if (u.isNil(NewValue) && !u.isNil(OldValue)) action = 'added';
+	if (!u.isNil(NewValue) && u.isNil(OldValue)) action = 'removed';
+	if (!u.isNil(NewValue) && !u.isNil(OldValue)) action = 'changed';
+
+	//field resolution
+	if (prettyLabels) {
+		const fieldLabel = schemas.find(f => f.apiName === apiField);
+		if (fieldLabel) field = fieldLabel.label;
+	}
+
+	if (!field && action !== 'created') field = apiField;
+
+	row.constructedEventName = `${object}: ${field} ${action}`.toLowerCase().replace(/^\s+|\s+$/g, ""); // ? https://stackoverflow.com/a/7636022
+	return row;
+}
+
+// ? because https://bit.ly/3IBTj3M
+function addInsert(row, sObject) {
+	const { Field: apiField, NewValue: current, OldValue: old, CreatedDate: when, CreatedById: who } = row;
+	const deDuple = { apiField, current, old, when, who, sObject };
+	row.$insert_id = u.md5(JSON.stringify(deDuple));
+	return row;
+}
+
+// ! mutate the config to make it work with the schema
 function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameId) {
 	// $ check mappings to allow api field names or pretty labels in config if pretty labels are applied
 	if (testResult?.records) {
@@ -277,9 +336,15 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 			}
 
 			else {
-				if (config.verbose) u.cLog(`label "${config.mappings[mapping]}" not found in source data; "${mapping}" will be undefined in mixpanel`);
+				if (config.type !== "event" && mapping !== "event_name_col")
+					if (config.verbose) u.cLog(`\n\tlabel "${config.mappings[mapping]}" not found in source data; "${mapping}" will be undefined in mixpanel`);
 			}
 		}
+	}
+
+	if (config.type === 'event') {
+		config.mappings.event_name_col = 'constructedEventName';
+		config.mappings.insert_id_col = '$insert_id'
 	}
 }
 
@@ -303,10 +368,19 @@ function isUsingFieldsAll(ast) {
 	if (functionFieldCount > 0 && isTheAllThing) {
 		return true;
 	}
-	
+
 	return false;
 }
 
+
+function isUsingSubqueries(ast) {
+	const subQuery = ast.fields.filter(f => f.subquery);
+	if (subQuery.length) {
+		return subQuery;
+	}
+
+	return false;
+}
 
 // ? https://stackoverflow.com/a/61602592
 function flatten(obj, roots = [], sep = '.') {
