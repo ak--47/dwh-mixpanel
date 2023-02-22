@@ -16,14 +16,12 @@
 		"logFile": "./tmp/log.txt",
 		"strict": true,
 		"compress": false,
-		"verbose": true
+		"verbose": true,
+		"workers": 20
 	},
 	"mixpanel": {
 		"project_id": "",
-		"service_account": "",
-		"service_secret": "",
 		"api_secret": "",
-		"token": "",
 		"region": "US",
 		"type": "event"
 	},

@@ -1,0 +1,30 @@
+{
+    "dwh": "azure",
+    "auth": {
+        "connection_string": ""
+    },
+    "sql": "SELECT TOP 5000 * FROM [dbo].[mp];",
+    "mappings": {
+        "event_name_col": "event",
+        "distinct_id_col": "uuid",
+        "time_col": "time",
+        "insert_id_col": "primary_key"
+    },
+    "options": {
+        "logFile": "./tmp/log.txt",
+        "strict": true,
+        "compress": false,
+        "verbose": true,
+        "workers": 20
+    },
+    "mixpanel": {
+        "project_id": "",
+        "api_secret": "",
+        "token": "",
+        "region": "",
+        "type": ""
+    },
+    "tags": {
+        "dwh": "azure"
+    }
+}

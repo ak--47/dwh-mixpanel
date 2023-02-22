@@ -1,0 +1,35 @@
+{
+    "dwh": "salesforce",
+    "auth": {
+		"user": "",
+		"password": "",
+		"resolve_field_names": true,
+		"rename_primary_id" : true,
+		"add_sfdc_links": true
+    },
+    "sql": "",
+    "mappings": {
+		"distinct_id_col": "Id",
+		"name_col": "Name",
+		"email_col": "Amount",		
+		"profileOperation": "$set"
+    },
+    "options": {
+        "logFile": "./tmp/log.txt",
+        "strict": true,
+        "compress": false,
+        "verbose": true,
+        "workers": 20
+    },
+    "mixpanel": {
+        "project_id": "",
+        "api_secret": "",
+        "token": "",
+        "region": "US",
+        "type": "group",
+		"groupKey": "Opportunity.Id"
+    },
+    "tags": {
+        "dwh": "salesforce"
+    }
+}

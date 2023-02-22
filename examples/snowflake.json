@@ -16,23 +16,19 @@
         "insert_id_col": "qux"
     },
     "options": {
-        "test": false,
         "logFile": "./tmp/log.txt",
 		"strict": true,
 		"compress": false,
-		"verbose": true 
+		"verbose": true,
+		"workers": 20
     },
     "mixpanel": {
         "project_id": "",
-        "service_account": "",
-        "service_secret": "",
 		"api_secret": "",
-		"token": "",
         "region": "US",
-        "type": "event",
-		"groupKey": "",
-		"lookupTableId": "",
-		"profileOperation": ""
-
-    }
+        "type": "event"
+    },
+	"tags": {
+		"dwh": "snowflake"		
+	}
 }

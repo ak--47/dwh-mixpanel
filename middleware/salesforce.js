@@ -9,16 +9,13 @@ import dayjs from "dayjs";
 
 
 export default async function salesforce(config, outStream) {
-	// TODOs 
-	// % docs
-
 	// * AST
 	let ast;
 	try {
 		ast = sqlParse.parseQuery(config.sql);
 		config.store({ sqlAnalysis: ast });
 
-		// $ name resolution unavailable w/FIELDS(ALL)
+		// % name resolution unavailable w/FIELDS(ALL)
 		if (isUsingFieldsAll(ast)) {
 			config.auth.resolve_field_names = false;
 			config.auth.rename_primary_id = false;
@@ -26,14 +23,14 @@ export default async function salesforce(config, outStream) {
 			if (config.verbose) u.cLog('\n\tappears as FIELDS(ALL) query; schema resolution is turned off');
 		}
 
-		// $ subqueries are not supported
+		// % subqueries are not supported
 		const hasSubqueries = isUsingSubqueries(ast);
 		if (hasSubqueries) {
 			u.cLog(hasSubqueries, `\nSubqueries (with nested objects) are not currently support by this module... please flatten your table an try again:`, 'ERROR');
 			process.exit(0);
 		}
 
-		// $ history queries are treated differently
+		// % history queries are treated differently
 		if (config.type === 'event') {
 			config.store({ fieldHistoryQuery: isFieldHistoryQuery(ast) });
 		}
@@ -79,7 +76,7 @@ export default async function salesforce(config, outStream) {
 	const sObject = config.dwhStore.sObject;
 	const sObjectsSchemas = config.dwhStore.sObjectsSchemas;
 	const isHistoryQuery = config.dwhStore.fieldHistoryQuery;
-
+	const event_name_col = config.mappings.event_name_col;
 	confirmMappings(config, getRowCount, schemaLabels, prettyLabels, renameId, isHistoryQuery);
 	emitter.emit('dwh query end', config);
 
@@ -129,7 +126,7 @@ export default async function salesforce(config, outStream) {
 
 				// events get special treatment
 				if (config.type === 'event') {
-					buildEvName(row, sObject, sObjectsSchemas, prettyLabels, isHistoryQuery);
+					buildEvName(row, sObject, sObjectsSchemas, prettyLabels, isHistoryQuery, event_name_col);
 					addInsert(row, sObject, isHistoryQuery);
 				}
 
@@ -305,10 +302,15 @@ async function queryForFields(conn, objectType) {
 
 };
 
-function buildEvName(row, sObject, schemas, prettyLabels, isHistoryQuery) {
+function buildEvName(row, sObject, schemas, prettyLabels, isHistoryQuery, event_name_col) {
 	// non history queries get sObject names
 	if (!isHistoryQuery) {
-		row.constructedEventName = u.multiReplace(sObject.toLowerCase(), [["history", ""], ["field", ""], ["__c", ""], ["__", ""]]);
+		if (event_name_col) {
+			row.constructedEventName = event_name_col?.toString();
+		}
+		else {
+			row.constructedEventName = u.multiReplace(sObject.toLowerCase(), [["history", ""], ["field", ""], ["__c", ""], ["__", ""]]);
+		}
 		return row;
 	}
 

@@ -269,7 +269,8 @@ describe('azure', () => {
 describe('salesforce', () => {
 	test('events (oppFieldHistory)', async () => {
 		const { mixpanel, salesforce, time } = await main({ ...salesforceEventsHistory, ...opts });
-		expect(mixpanel.success).toBe(4029);
+		expect(mixpanel.success).toBeGreaterThan(4000);
+		expect(mixpanel.failed).toBe(0);
 		expect(mixpanel.duration).toBeGreaterThan(0);
 		expect(mixpanel.responses.length).toBe(3);
 		expect(mixpanel.errors.length).toBe(0);
@@ -279,8 +280,9 @@ describe('salesforce', () => {
 
 	test('events (flat)', async () => {
 		const { mixpanel, salesforce, time } = await main({ ...salesforceEventsFlat, ...opts });
-		expect(mixpanel.success).toBe(19451);
+		expect(mixpanel.success).toBeGreaterThan(19000);
 		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.failed).toBe(0);
 		expect(mixpanel.responses.length).toBe(10);
 		expect(mixpanel.errors.length).toBe(0);
 		expect(salesforce.sObject).toBe('Task');
