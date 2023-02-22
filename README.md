@@ -56,7 +56,7 @@ it looks like this:
 
 at the end of this walkthrough, a JSON file will be saved to your current working directory; this JSON will contain the configuration of what you typed into the CLI. the CLI will then ask you if you'd like to trigger a run:
 
-<img src="https://aktunes.neocities.org/dwh-mixpanel/config.png" alt="confirmation menu" width=450 />
+<img src="https://aktunes.neocities.org/dwh-mixpanel/config.png" alt="confirmation menu" width=500 />
 
 once you have a configuration file, you can run (and _re-run_) that job by passing the configuration file as the first argument to this module:
 
