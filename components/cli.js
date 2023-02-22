@@ -2,6 +2,7 @@ import env from './env.js';
 import Config from "./config.js";
 import inquirer from 'inquirer';
 import sqlParse from 'node-sql-parser';
+import soqlParse from 'soql-parser-js';
 import u from 'ak-tools';
 import box from 'cli-box';
 import { writeFileSync } from 'fs';
@@ -726,7 +727,14 @@ function verifySQL(sqlText) {
 		}
 
 		catch (e) {
-			valid = 'not a syntactically valid SQL Query; try a minifier: https://codebeautify.org/sql-minifier';
+			try {
+				soqlParse.parseQuery(sqlText, { allowPartialQuery: false, allowApexBindVariables: false, ignoreParseErrors: false });
+				valid = true;
+				return valid;
+			}
+			catch (e) {
+				valid = 'not a syntactically valid SQL Query; try a minifier: https://codebeautify.org/sql-minifier';
+			}
 		}
 
 	}

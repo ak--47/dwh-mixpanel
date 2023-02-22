@@ -1,6 +1,7 @@
 {
 	"jest.jestCommandLine": "npm run test --",
 	"jest.autoRun": "off",
+	"jest.monitorLongRun": "off",
 	"files.exclude": {
 		"**/node_modules": true
 	},
@@ -8,6 +9,7 @@
 	"typescript.implementationsCodeLens.enabled": true,
 	"cSpell.words": [
 		"barsize",
+		"bazqux",
 		"biquery",
 		"DATETIME",
 		"DDTHH",
@@ -15,6 +17,7 @@
 		"flinksql",
 		"gcloud",
 		"gtoken",
+		"jsforce",
 		"msnodesqlv",
 		"mydnd",
 		"papaparse",
@@ -23,7 +26,12 @@
 		"ROWCOUNT",
 		"rowsaffected",
 		"schemaless",
+		"sfdc",
+		"sobject",
+		"soql",
 		"sqlify",
+		"subqueries",
+		"subquery",
 		"tldr",
 		"tnpx",
 		"transactsql",

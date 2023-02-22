@@ -5,7 +5,7 @@ JSDOC TYPINGS
 */
 
 /**
- * @typedef {'biquery' | 'athena' | 'snowflake' | 'azure'}  SupportedWarehouses the data warehouses supported by this module
+ * @typedef {'biquery' | 'athena' | 'snowflake' | 'azure' | 'salesforce'}  SupportedWarehouses the data warehouses supported by this module
  */
 
 /**

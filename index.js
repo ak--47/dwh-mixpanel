@@ -22,6 +22,7 @@ import bigQuery from './middleware/bigquery.js';
 import snowflake from './middleware/snowflake.js';
 import athena from './middleware/athena.js';
 import azure from "./middleware/azure.js";
+import salesforce from "./middleware/salesforce.js";
 
 /*
 ----
@@ -92,6 +93,14 @@ async function main(params) {
 		console.error(`configuration is invalid! reason:\n\n\t${e}\n\nquitting...\n\n`);
 		process.exit(0);
 	}
+
+	// don't allow strict mode imports if no insert_id it supplied
+	if (config.type === 'event' && config.options.strict && !config.mappings.insert_id_col) {
+		if (config.verbose) u.cLog('\tstrict mode imports are not possible without $insert_id; turning strict mode off...');
+		config.options.strict = false;
+		delete config.mappings.insert_id_col;
+	}
+
 	config.etlTime.start();
 
 
@@ -113,6 +122,9 @@ async function main(params) {
 				break;
 			case 'azure':
 				dwh = await azure(config, mpStream);
+				break;
+			case 'salesforce':
+				dwh = await salesforce(config, mpStream);
 				break;
 			default:
 				if (config.verbose) u.cLog(`i do not know how to access ${config.warehouse}... sorry`);
@@ -258,7 +270,7 @@ emitter.on('mp batch', (config, numImported) => {
 		try {
 			config.progress(numImported, 'mp');
 		}
-		catch(e) {
+		catch (e) {
 			//noop
 		}
 	}

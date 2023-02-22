@@ -94,13 +94,8 @@ export default async function athena(config, outStream) {
 
 
 	// * MODELING
-	if (config.type === "event") {
-		config.timeTransform = (time) => { return dayjs(time).valueOf(); };
-	}
-
-	else {
-		config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
-	}
+	config.eventTimeTransform = (time) => { return dayjs(time).valueOf(); };
+	config.timeTransform = (time) => { return dayjs(time).format('YYYY-MM-DDTHH:mm:ss'); };
 
 	let dateFields;
 	if (schema) {

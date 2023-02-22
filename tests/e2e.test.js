@@ -28,6 +28,12 @@ const azureUsers = require('../environments/azure/users.json');
 const azureGroups = require('../environments/azure/groups.json');
 const azureTables = require('../environments/azure/tables.json');
 
+const salesforceGroups = require('../environments/salesforce/groups.json');
+const salesforceEventsHistory = require('../environments/salesforce/eventsHistories.json');
+const salesforceUsers = require('../environments/salesforce/users.json');
+const salesforceTables = require('../environments/salesforce/tables.json');
+const salesforceEventsFlat = require('../environments/salesforce/eventsFlat.json');
+
 const opts = {
 	options: {
 		"verbose": false
@@ -256,6 +262,63 @@ describe('azure', () => {
 		expect(azure.job).toBeTruthy();
 		expect(azure.schema).toBeTruthy();
 
+
+	}, timeout);
+});
+
+describe('salesforce', () => {
+	test('events (oppFieldHistory)', async () => {
+		const { mixpanel, salesforce, time } = await main({ ...salesforceEventsHistory, ...opts });
+		expect(mixpanel.success).toBeGreaterThan(4000);
+		expect(mixpanel.failed).toBe(0);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(3);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(salesforce.sObject).toBe('OpportunityFieldHistory');
+
+	}, timeout);
+
+	test('events (flat)', async () => {
+		const { mixpanel, salesforce, time } = await main({ ...salesforceEventsFlat, ...opts });
+		expect(mixpanel.success).toBeGreaterThan(19000);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.failed).toBe(0);
+		expect(mixpanel.responses.length).toBe(10);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(salesforce.sObject).toBe('Task');
+
+	}, timeout);
+
+
+	test('users w/fields(all)', async () => {
+		const { mixpanel, salesforce, time } = await main({ ...salesforceUsers, ...opts });
+		expect(mixpanel.success).toBe(200);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(1);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(salesforce.rows).toBe(200);
+
+		expect(salesforce.schema).toBeTruthy();
+
+	}, timeout);
+
+
+	test('groups', async () => {
+		const { mixpanel, salesforce, time } = await main({ ...salesforceGroups, ...opts });
+		expect(mixpanel.success).toBe(400);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(2);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(salesforce.schema.Id).toStrictEqual({ label: "Opportunity.Id", type: "primary_identifier" });
+	}, timeout);
+
+	test('tables', async () => {
+		const { mixpanel, salesforce, time } = await main({ ...salesforceTables, ...opts });
+		expect(mixpanel.success).toBe(100);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBe(1);
+		expect(mixpanel.errors.length).toBe(0);
+		expect(salesforce.schema.Id).toStrictEqual({ label: "Account.Id", type: "primary_identifier" });
 
 	}, timeout);
 });

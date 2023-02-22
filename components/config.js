@@ -48,7 +48,7 @@ export default class dwhConfig {
 		this.sql = spec.sql || ``;
 		this.auth = spec.auth || {};
 
-		this.mappings = u.objDefault(spec.mappings || {}, defaultMappings);
+		this.mappings = spec.mappings; //u.objDefault(spec.mappings || {}, defaultMappings);
 		this.options = u.objDefault(spec.options || {}, defaultOptions);
 		this.mixpanel = u.objDefault(spec.mixpanel || {}, defaultMixpanel);
 		this.tags = spec.tags || {};
@@ -282,6 +282,18 @@ export default class dwhConfig {
 				domain: this.auth.domain,
 				database: this.auth.database
 
+			};
+		}
+
+		if (this.dwh === 'salesforce') {
+			return {
+				query: this.sql,
+				user: this.auth.user,
+				password: this.auth.password,
+				version: this.auth.version?.toString() || "51.0",
+				prettyLabels: u.isNil(this.auth.resolve_field_names) ? true : this.auth.resolve_field_names,
+				renameId: u.isNil(this.auth.rename_primary_id) ? true : this.auth.rename_primary_id,
+				addUrls: u.isNil(this.auth.add_sfdc_links) ? true : this.auth.add_sfdc_links
 			};
 		}
 
