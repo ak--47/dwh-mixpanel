@@ -571,7 +571,7 @@ you can input your connection string into the `auth` object with the key `connec
 
 if your database is hosted in Azure Cloud, you can find your connection strings in the Azure SQL UI; this module uses the **ADO.NET** syntax:
 
-<img src="https://aktunes.neocities.org/dwh-mixpanel/azureStrings.png" alt="azure cloud screenshot" width=420/>
+<img src="https://aktunes.neocities.org/dwh-mixpanel/azureStrings.png" alt="azure cloud screenshot" width=620/>
 
 make sure to choose the right connection string version that is supported by your database.
 (hint: not all Azure DBs are setup with Active Directory)

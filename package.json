@@ -1,6 +1,6 @@
 {
 	"name": "dwh-mixpanel",
-	"version": "1.0.52",
+	"version": "1.0.6",
 	"description": "rETL from a data warehouse to mixpanel",
 	"main": "index.js",
 	"repository": {

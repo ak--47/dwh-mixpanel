@@ -139,7 +139,7 @@ export default async function salesforce(config, outStream) {
 				//primary id rename
 				if (renameId) row = u.rnKeys(row, { [idKey]: primaryId[idKey].label });
 
-				outStream.push(mpModel(row));
+ 				outStream.push(mpModel(row));
 			})
 
 			.on("end", function () {
@@ -376,7 +376,7 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 
 			else {
 				if (config.type !== "event" && mapping !== "event_name_col")
-					if (config.verbose) u.cLog(`\n\tlabel "${config.mappings[mapping]}" not found in source data; "${mapping}" will be undefined in mixpanel`);
+					if (config.verbose) u.cLog(`\n\tlabel "${config.mappings[mapping]}" not found in source data; "${mapping}" will be undefined in mixpanel\n`);
 			}
 		}
 	}
@@ -385,7 +385,8 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 		config.mappings.event_name_col = 'constructedEventName';
 		if (isHistoryQuery) {
 			config.mappings.insert_id_col = '$insert_id';
-			config.mappings.time_col = 'CreatedDate';
+			if (prettyLabels) config.mappings.time_col = 'Created Date';
+			if (!prettyLabels) config.mappings.time_col = 'CreatedDate';
 		}
 
 	}
