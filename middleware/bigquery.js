@@ -105,7 +105,6 @@ export default async function bigquery(config, outStream) {
 				.getQueryResultsStream({ highWaterMark: 2000 * config.options.workers, timeoutMs: 0 })
 				.on("error", reject)
 				.on("data", (row) => {
-					config.got();
 					outStream.push(mpModel(row));
 				})
 				.on("end", () => {

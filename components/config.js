@@ -14,21 +14,22 @@ DEFAULTS
 --------
 */
 
-const defaultMappings = {
-	event_name_col: "event",
-	distinct_id_col: "distinct_id",
-	time_col: "time",
-	insert_id_col: "insert_id"
-};
+// const defaultMappings = {
+// 	event_name_col: "event",
+// 	distinct_id_col: "distinct_id",
+// 	time_col: "time",
+// 	insert_id_col: "insert_id"
+// };
 
-const defaultOptions = {
-	test: false,
+/** @type {Types.Options} */
+const defaultImportOptions = {
 	logFile: `./logs/log-${dayjs().format('YYYY-MM-DDTHH.mm-ss')}.txt`,
 	strict: true,
-	compress: false,
+	compress: true,
 	verbose: true,
-	streamSize: 27,
-	workers: 10
+	workers: 10,
+	abridged: true
+	
 };
 
 const defaultMixpanel = {
@@ -49,7 +50,7 @@ export default class dwhConfig {
 		this.auth = spec.auth || {};
 
 		this.mappings = spec.mappings; //u.objDefault(spec.mappings || {}, defaultMappings);
-		this.options = u.objDefault(spec.options || {}, defaultOptions);
+		this.options = u.objDefault(spec.options || {}, defaultImportOptions);
 		this.mixpanel = u.objDefault(spec.mixpanel || {}, defaultMixpanel);
 		this.tags = spec.tags || {};
 
@@ -102,7 +103,7 @@ export default class dwhConfig {
 
 					});
 				}
-				if (type === 'mp') {
+				else if (type === 'mp') {
 					this.mpProgress = this.multiBar.create(total, startValue, {}, {
 						format: `${mixpanelLabel} |` + colors.magenta('{bar}') + `| {value}/{total} ${this.type}s ` + colors.green('{percentage}%') + ` {duration_formatted} ETA: {eta_formatted}`
 
@@ -115,7 +116,7 @@ export default class dwhConfig {
 				if (type === 'dwh') {
 					this.dwhProgress.increment(createOrUpdate);
 				}
-				if (type === 'mp') {
+				else if (type === 'mp') {
 					this.mpProgress.increment(createOrUpdate);
 				}
 			}
@@ -171,8 +172,8 @@ export default class dwhConfig {
 		this.inCount++;
 	}
 
-	sent() {
-		this.outCount++;
+	sent(num) {
+		this.outCount += num || 1;
 	}
 
 	store(data, where = 'dwh') {
@@ -217,6 +218,7 @@ export default class dwhConfig {
 
 	mpOpts() {
 		const mp = this.mixpanel;
+		/** @type {Types.Options} */
 		const opt = this.options;
 		return {
 			recordType: mp.type,
@@ -228,7 +230,8 @@ export default class dwhConfig {
 			fixData: false,
 			verbose: false,
 			workers: opt.workers,
-			recordsPerBatch: mp.type === 'group' ? 200 : 2000
+			recordsPerBatch: mp.type === 'group' ? 200 : 2000,
+			abridged: opt.abridged
 
 		};
 	}

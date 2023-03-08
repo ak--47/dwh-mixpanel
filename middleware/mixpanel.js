@@ -4,7 +4,7 @@ import emitter from '../components/emitter.js';
 import u from 'ak-tools';
 
 export default function createStream(config, cb = () => { }) {
-	
+
 	const inStream = new Stream.PassThrough({
 		objectMode: true,
 		highWaterMark: config.options.workers * 2000
@@ -30,25 +30,27 @@ export default function createStream(config, cb = () => { }) {
 
 	inStream.on("error", (err) => {
 		if (config.verbose) u.cLog(err, 'dwh fail', 'ERROR');
-		config.log(err)
+		config.log(err);
 	});
 
 	outStream.on("error", (err) => {
 		if (config.verbose) u.cLog(err, 'mp fail', 'ERROR');
-		config.log(err)
+		config.log(err);
 	});
 
-	outStream.once('data', ()=>{
+	outStream.once('data', () => {
 		emitter.emit('mp import start', config);
-	})
+	});
 
-	inStream.on('data', ()=>{
-		emitter.emit('dwh batch', config)
-	})
+	inStream.on('data', () => {
+		config.got();
+		emitter.emit('dwh batch', config);
+	});
 
 	outStream.on("data", (resp) => {
-		const records = resp?.num_records_imported || config.mpOpts()?.recordsPerBatch || 2000
-		emitter.emit('mp batch', config, records)
+		const records = resp?.num_records_imported || config.mpOpts()?.recordsPerBatch || 2000;
+		config.sent(records);
+		emitter.emit('mp batch', config, records);
 	});
 
 	return inStream;

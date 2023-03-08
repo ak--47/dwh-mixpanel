@@ -120,7 +120,6 @@ export default async function salesforce(config, outStream) {
 			})
 
 			.on("record", function (record) {
-				config.got();
 				let row = u.objFilter(flatten(record), k => !k.includes('attributes.'), 'key');
 				const idKey = Object.keys(primaryId)[0];
 
@@ -376,7 +375,7 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 
 			else {
 				if (config.type !== "event" && mapping !== "event_name_col")
-					if (config.verbose) u.cLog(`\n\tlabel "${config.mappings[mapping]}" not found in source data; "${mapping}" will be undefined in mixpanel\n`);
+					if (config.verbose) u.cLog(`\n\tlabel "${config.mappings[mapping]}" not found in source data; "${mapping}" may be undefined in mixpanel\n`);
 			}
 		}
 	}

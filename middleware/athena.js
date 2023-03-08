@@ -188,7 +188,6 @@ export default async function athena(config, outStream) {
 					emitter.emit('dwh stream start', config);
 				})
 				.on("data", (record) => {
-					config.got();
 					outStream.push(mpModel(record.value));
 				})
 				.on("end", () => {

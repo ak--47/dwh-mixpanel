@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* eslint-disable no-undef */
 /* eslint-disable no-debugger */
 /* eslint-disable no-unused-vars */
@@ -36,7 +37,8 @@ const salesforceEventsFlat = require('../environments/salesforce/eventsFlat.json
 
 const opts = {
 	options: {
-		"verbose": false
+		"verbose": false,
+		"abridged": false
 	}
 };
 

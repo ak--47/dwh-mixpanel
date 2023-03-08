@@ -5,6 +5,10 @@ JSDOC TYPINGS
 */
 
 /**
+ * @typedef {import('../node_modules/mixpanel-import/types.js').Options} ImportOptions
+ */
+
+/**
  * @typedef {'biquery' | 'athena' | 'snowflake' | 'azure' | 'salesforce'}  SupportedWarehouses the data warehouses supported by this module
  */
 
@@ -43,12 +47,16 @@ JSDOC TYPINGS
  */
 
 /**
- * @typedef Options options to use for the job
+ * @typedef LocalOptions options to use for the job
  * @prop {string} logFile a local path to write log files to
  * @prop {boolean} verbose display verbose console output
  * @prop {boolean} strict use strict mode when sending data to mixpanel
  * @prop {boolean} compress compress data in transit
  * @prop {Number} workers number of concurrent workers to make requests to mixpanel
+ */
+
+/**
+ * @typedef {LocalOptions & ImportOptions} Options
  */
 
 /**

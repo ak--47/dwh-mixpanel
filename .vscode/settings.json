@@ -6,6 +6,7 @@
 		"**/node_modules": true
 	},
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"js/ts.implicitProjectConfig.checkJs": false,
 	"typescript.implementationsCodeLens.enabled": true,
 	"cSpell.words": [
 		"barsize",
@@ -20,6 +21,7 @@
 		"jsforce",
 		"msnodesqlv",
 		"mydnd",
+		"nocheck",
 		"papaparse",
 		"recordset",
 		"retl",

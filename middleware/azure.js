@@ -96,19 +96,8 @@ export default async function azure(config, outStream) {
 		});
 
 		job.on('row', (row) => {
-			config.got();
 			outStream.push(mpModel(row));
 		});
-
-		// job.on('rowsaffected', (rowCount) => {
-		// 	// ! seems to fire last
-		// 	config.store({ rows: rowCount });
-		// });
-
-		// job.on('info', (message) => {
-		// 	// ! dunno what this is
-		// 	debugger;
-		// });
 
 		job.on('error', (err) => {
 			reject(err);

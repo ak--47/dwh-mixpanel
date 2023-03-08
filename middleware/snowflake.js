@@ -91,7 +91,6 @@ export default async function snowflake(config, outStream) {
 				})
 				.on("data", (row) => {
 					emitter.emit('dwh stream start', config);
-					config.got();
 					outStream.push(mpModel(row));
 				})
 				.on("end", () => {
