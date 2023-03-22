@@ -29,7 +29,7 @@ const defaultImportOptions = {
 	verbose: true,
 	workers: 10,
 	abridged: true
-	
+
 };
 
 const defaultMixpanel = {
@@ -197,7 +197,12 @@ export default class dwhConfig {
 		return {
 			mixpanel: this.mpStore,
 			[this.dwh]: this.dwhStore,
-			time: this.etlTime.report(false),
+			time: {
+				job: this.etlTime.report(false),
+				query: this.queryTime.report(false),
+				dwhStream: this.streamTime.report(false),
+				mpUpload: this.importTime.report(false),
+			},
 			logs: this.logStore
 		};
 	}
