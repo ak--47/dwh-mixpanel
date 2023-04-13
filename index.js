@@ -288,6 +288,8 @@ export default main;
 if (esMain(import.meta)) {
 	cli().then(answers => {
 		const { params, run } = answers;
+		//multiline fix for priv keys
+		if (answers.params.auth?.private_key) answers.params.auth.private_key = answers.params.auth.private_key.replaceAll("\\n", "\n")
 		if (run) {
 			params.options.verbose = true;
 			return main(params);

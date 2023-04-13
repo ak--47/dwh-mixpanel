@@ -9,6 +9,7 @@ import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import c from 'ansi-colors';
 
+//todo service account on bigquery IS escaping multiline strings... we don't want it to do that...
 
 export default async function cli() {
 	// * CHECK FOR A PASSED-IN CONFIG
@@ -199,6 +200,8 @@ function bigqueryAuth(env) {
 			default: env?.auth?.client_email,
 			validate: passesNotEmpty
 		},
+		//todo this should not be escaped, but should be a raw string...
+		// ? https://github.com/SBoudrias/Inquirer.js#readme
 		{
 			message: "what is your Service Account's private key?",
 			name: "private_key",

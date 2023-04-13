@@ -31,7 +31,9 @@ JSDOC TYPINGS
 /**
  * @typedef Mappings mappings of dwh columns to mixpanel fields
  * @prop {string} [event_name_col] column for event name
- * @prop {string} [distinct_id_col] column for uniquer user id
+ * @prop {string} [distinct_id_col] column for distinct_id (original id merge)
+ * @prop {string} [user_id_col] column for user id (simplified id merge)
+ * @prop {string} [device_id_col] column for device_id / anon_id (simplified id merge)
  * @prop {string} [time_col] column for event time
  * @prop {string} [insert_id_col] column for row id (deduplication)
  * @prop {string} [name_col] the $name to use for the user/group profile

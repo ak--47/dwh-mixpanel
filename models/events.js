@@ -1,7 +1,7 @@
 import u from "ak-tools";
 
 export default function modelEvent(row, mappings, timeFields = [], eventTimeTransform, timeTransform, tags) {
-	const { distinct_id_col, event_name_col, insert_id_col, time_col } = mappings;
+	const { distinct_id_col = "", user_id_col = "", device_id_col = "", event_name_col, insert_id_col, time_col } = mappings;
 	const modeledEvent = {
 		event: row[event_name_col],
 		properties: {
@@ -11,6 +11,23 @@ export default function modelEvent(row, mappings, timeFields = [], eventTimeTran
 			$source: 'dwh-mixpanel'
 		},
 	};
+
+	//id mgmt v3
+	if (user_id_col && device_id_col) {
+		modeledEvent.properties.$user_id = row[user_id_col] || ""
+		modeledEvent.properties.$device_id = row[device_id_col] || ""
+	}
+
+	//id mgmt v2
+	else if (distinct_id_col) {
+		modeledEvent.properties.distinct_id = row[distinct_id_col] || ""
+	}
+
+	else {
+		throw 'no distinct_id or user_id/device_id mapping provided'
+	}
+
+	
 	
 	timeFields = timeFields.filter(f => f !== time_col);
 	// other time transforms

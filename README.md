@@ -219,12 +219,21 @@ therefore, your SQL query should select all the fields you want in mixpanel, and
 
 **event mappings**:
 
+**NOTE:** this module supports [original id merge](https://help.mixpanel.com/hc/en-us/articles/9648680824852-ID-Merge-Implementation-Best-Practices) AND [simplified id merge](https://help.mixpanel.com/hc/en-us/articles/14377628688788-Getting-Started-with-the-Simplified-ID-Merge-API#distinct-id) ... there's an [FAQ](https://help.mixpanel.com/hc/en-us/articles/14383975110292-Original-vs-Simplified-ID-Merge-FAQ) which explains the differences, but usually **simplified id merge** is the best solve for rETL.
+
 ```javascript
 {
   // REQUIRED
   'event_name_col': '', 	// column for event name
-  'distinct_id_col': '', 	// column for uniquer user id
   'time_col': '', 		// column for event time
+
+  // REQUIRED FOR ORIGINAL ID MERGE
+   'distinct_id_col': '', 	// column for distinct_id
+
+  // REQUIRED FOR SIMPLIFIED ID MERGE
+   'user_id_col': '', 		// column for user_id / canonical_id
+   'device_id_col': '', 	// column for device_id / anon_id
+
   // OPTIONAL
   'insert_id_col': '' 		// column for row id (deduplication)
 }
