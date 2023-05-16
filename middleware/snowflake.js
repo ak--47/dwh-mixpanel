@@ -41,7 +41,7 @@ export default async function snowflake(config, outStream) {
 		schema = await snowflake.execute(schemaQuery);
 		config.store({ schema });
 	} catch (e) {
-		if (config.verbose) u.cLog(`could not query schema:\n${e.message}\n\tthat's ok though...`);
+		if (config.verbose) u.cLog(`could not query schema:\ngot: ${e.message}\n\tthat's ok though...`);
 	}
 
 

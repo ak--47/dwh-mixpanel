@@ -248,7 +248,7 @@ emitter.once('mp import end', (config) => {
 		// u.cLog(`\tmixpanel took ${config.importTime.report(false).human}\n`);
 		u.cLog(c.magenta('\nstreaming ended!'));
 		u.cLog(c.red(`\nCOMPLETE!`));
-		u.cLog(c.yellow(`\tprocessed ${u.comma(summary.mixpanel.total)} ${config.type}s in ${summary.time.human}`));
+		u.cLog(c.yellow(`\tprocessed ${u.comma(summary.mixpanel.total)} ${config.type}s in ${summary.time.job.human}`));
 		u.cLog(c.yellow(`\t(${successRate}% success rate; ~${u.comma(evPerSec)} EPS)`));
 		u.cLog(`\ncheck out your data!\n` + c.blue.underline(`https://mixpanel.com/project/${config.mpAuth().project}\n`));
 	}
