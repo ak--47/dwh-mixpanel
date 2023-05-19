@@ -375,17 +375,17 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 			const prettyName = schemaLabels[userInputMapping];
 
 			//user put in API name
-			if (testRecord[userInputMapping] && prettyName) {
+			if (!u.isNil(testRecord[userInputMapping]) && prettyName) {
 				if (prettyLabels) config.mappings[mapping] = prettyName;
 				if (renameId && mapping === 'distinct_id_col') config.mappings[mapping] = prettyName;
 			}
 
 			//user put in pretty name
-			else if (testRecord[getKeyByValue(schemaLabels, userInputMapping)] && !prettyName) {
+			else if (!u.isNil(testRecord[getKeyByValue(schemaLabels, userInputMapping)]) && !prettyName) {
 				if (!prettyLabels) config.mappings[mapping] = getKeyByValue(schemaLabels, userInputMapping);
 			}
 
-			else if (testRecord[userInputMapping]) {
+			else if (!u.isNil(testRecord[userInputMapping])) {
 				// noop; it exists
 			}
 
