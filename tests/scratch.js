@@ -15,7 +15,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
 // link to a config!
-let current = require("../environments/current-sfdc.json");
+let current = require("../environments/current.json");
 
 
 // do the thing!

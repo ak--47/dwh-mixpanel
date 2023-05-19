@@ -223,9 +223,9 @@ export default class dwhConfig {
 
 	mpOpts() {
 		const mp = this.mixpanel;
-		/** @type {Types.Options} */
 		const opt = this.options;
-		return {
+		/** @type {import('../node_modules/mixpanel-import/types/types.d.ts').Options} */
+		const options = {
 			recordType: mp.type,
 			region: mp.region,
 			streamFormat: 'json',
@@ -236,9 +236,11 @@ export default class dwhConfig {
 			verbose: false,
 			workers: opt.workers,
 			recordsPerBatch: mp.type === 'group' ? 200 : 2000,
-			abridged: opt.abridged
-
+			abridged: opt.abridged,
+			removeNulls: true,
+			forceStream: true
 		};
+		return options;
 	}
 
 	dwhAuth() {
