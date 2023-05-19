@@ -696,6 +696,26 @@ would (likely) use the following mappings:
 
 this will produce group profiles for every account, using each account's `Id` as the `$group_id`
 
+in some instances  it can be tedious to list every single field that you may wish to include on a salesforce object. salesforce does _not_ support `SELECT *` queries, but if you want to bring over all flattened properties from an object, `dwh-mixpanel` does support this syntax.
+
+by example, here is a query + mappings which will create user profiles for all of your salesforce end users and bring in every field on the `User` object in salesforce:
+
+```sql
+SELECT * FROM User
+```
+
+and the corresponding mappings:
+
+```json
+ "mappings": {
+        "distinct_id_col": "Id",
+        "name_col": "Name",
+        "email_col": "Email",        
+        "profileOperation": "$set"
+    },
+```
+please use this feature with care as it does not traverse [relationship fields](https://help.salesforce.com/s/articleView?id=sf.overview_of_custom_object_relationships.htm&type=5)
+
 ###### events: field history
 
 modeling **events** from salesforce in mixpanel is a bit different; in most cases, you will want to model [field history objects](https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_opportunityfieldhistory.htm) as events in mixpanel. these objects contain the "change tables" that describe the lifecycle of a salesforce object... when an object is created, or when it's field value change (i.e. an `Opportunity` changing `Stage`), it's _field history_ is updated..
