@@ -8,6 +8,9 @@ import box from 'cli-box';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import c from 'ansi-colors';
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const { version: VERSION } = require("../package.json");
 
 //todo service account on bigquery IS escaping multiline strings... we don't want it to do that...
 
@@ -773,19 +776,11 @@ o-o   o       o o  o         o       o   o o-O-o o   o o--o    O  o   o o--o o
 o-o     o   o   o  o         o       o   o o-O-o o   o o     o   oo   o o--o O---o                                                                                                                                                                    
 `;
 
-const banner = `\n\tmove data from ${c.cyan('your warehouse')}... ${c.magenta('to mixpanel')}!\n\tby AK (v${process.env.npm_package_version || 1})\n\thttps://github.com/ak--47/dwh-mixpanel\n\n`;
+const banner = `\n\tmove data from ${c.cyan('your warehouse')}... ${c.magenta('to mixpanel')}!\n\tby AK (v${VERSION})\n\thttps://github.com/ak--47/dwh-mixpanel\n\n`;
 const note = `this tutorial will ask you a few questions to help you build a configuration file!\n\nyou will want to be logged into your data warehouse + your mixpanel account\n\nnote: once finished with this walkthrough, you will be able to re-use this configuration file with:\n\tnpx dwh-mixpanel ./path-to-config.json\n\n`;
 
 const welcome = hero.concat(banner).concat(note);
 const shortWelcome = hero.concat(banner);
-
-// function logo(name) {
-// 	return `
-// ----------------------
-// ${name.toUpperCase()}
-// ----------------------
-// `;
-// }
 
 
 function logo(text) {
