@@ -487,9 +487,10 @@ function isSelectStarQuery(query) {
 async function resolveSelectStarQueries(query, connection, config) {
 	query = query.replace('SELECT *', 'SELECT Id');
 	const ast = sqlParse.parseQuery(query);
-	const { sObject } = ast;
 	const schema = await getSchema(ast, connection, config, true);
-	const allFields = schema.map(f => f.apiName);
-	const newQuery = `SELECT Id, ${allFields.join(', ')} FROM ${sObject}`;
+	const allFields = schema.map(f => ({ type: "Field", field: f.apiName }));
+	allFields.unshift({ type: "Field", field: "Id" });
+	ast.fields = allFields;
+	const newQuery = sqlParse.composeQuery(ast);
 	return newQuery;
 }
