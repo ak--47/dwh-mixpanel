@@ -9,10 +9,33 @@ import dayjs from "dayjs";
 
 
 export default async function salesforce(config, outStream) {
+	// * AUTH & OPTIONS
+	let connection, urlPrefix, query, prettyLabels, renameId, addUrls, user, password, version, dwhAuth;
+	try {
+		({ query, ...dwhAuth } = config.dwhAuth());
+		({ user, password, version, prettyLabels = true, renameId = true, addUrls = true } = dwhAuth); // $ options
+
+		connection = new jsforce.Connection({ version });
+		const login = await connection.login(user, password);  // ? other auth: https://jsforce.github.io/document/#connection
+		config.store({ connection: { ...login } });
+		const identity = await connection.identity();
+		config.store({ instance: identity });
+		urlPrefix = `${identity.urls?.custom_domain}`;
+	}
+
+	catch (e) {
+		u.cLog('could not connect to salesforce', e.message, 'ERROR');
+		process.exit(0);
+	}
+
 	// * AST
 	let ast;
 	try {
-		ast = sqlParse.parseQuery(config.sql);
+		// % check for SELECT * queries
+		if (isSelectStarQuery(config.sql)) query = await resolveSelectStarQueries(config.sql, connection, config);
+
+		// % parse query to AST
+		ast = sqlParse.parseQuery(query);
 		config.store({ sqlAnalysis: ast });
 
 		// % name resolution unavailable w/FIELDS(ALL)
@@ -42,16 +65,7 @@ export default async function salesforce(config, outStream) {
 		if (config.verbose) u.cLog("\ncould not parse SOQL query to AST...\n\tfield label resolution won't work (but the data can still be sent!)\n");
 	}
 
-	// * AUTH & OPTIONS
-	const { query, ...dwhAuth } = config.dwhAuth();
-	const { user, password, version, prettyLabels, renameId, addUrls } = dwhAuth; // $ options
 
-	const connection = new jsforce.Connection({ version });
-	const login = await connection.login(user, password);  // ? other auth: https://jsforce.github.io/document/#connection
-	config.store({ connection: { ...login } });
-	const identity = await connection.identity();
-	config.store({ instance: identity });
-	const urlPrefix = `${identity.urls?.custom_domain}`;
 
 	// * ROW COUNTS
 	emitter.emit('dwh query start', config);
@@ -138,7 +152,7 @@ export default async function salesforce(config, outStream) {
 				//primary id rename
 				if (renameId) row = u.rnKeys(row, { [idKey]: primaryId[idKey].label });
 
- 				outStream.push(mpModel(row));
+				outStream.push(mpModel(row));
 			})
 
 			.on("end", function () {
@@ -158,7 +172,7 @@ export default async function salesforce(config, outStream) {
 
 
 // HELPERS
-async function getSchema(ast, connection, config) {
+async function getSchema(ast, connection, config, justSchema = false) {
 	// $ note... this is currently limited to ONE level of depth; 
 	// $ Owner.Name is fine, but Owner.UserRole.Name will not resolve...
 	const fieldLabels = {};
@@ -175,6 +189,8 @@ async function getSchema(ast, connection, config) {
 
 			// get the primary object's metadata ... e.x. "FROM OPPORTUNITY"
 			const primSObjectSchema = await connection.sobject(primarySObject).describe();
+
+			if (justSchema) return getFields(primSObjectSchema);
 
 
 			// resolve references in query to actual names of related sObjects ... Owner => User
@@ -458,4 +474,22 @@ function objectMap(object, mapFn) {
 // ? https://stackoverflow.com/a/28191966
 function getKeyByValue(object, value) {
 	return Object.keys(object).find(key => object[key] === value);
+}
+
+
+function isSelectStarQuery(query) {
+	if (query.includes('SELECT *')) {
+		return true;
+	}
+	return false;
+}
+
+async function resolveSelectStarQueries(query, connection, config) {
+	query = query.replace('SELECT *', 'SELECT Id');
+	const ast = sqlParse.parseQuery(query);
+	const { sObject } = ast;
+	const schema = await getSchema(ast, connection, config, true);
+	const allFields = schema.map(f => f.apiName);
+	const newQuery = `SELECT Id, ${allFields.join(', ')} FROM ${sObject}`;
+	return newQuery;
 }

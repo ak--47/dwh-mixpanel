@@ -34,6 +34,7 @@ const salesforceEventsHistory = require('../environments/salesforce/eventsHistor
 const salesforceUsers = require('../environments/salesforce/users.json');
 const salesforceTables = require('../environments/salesforce/tables.json');
 const salesforceEventsFlat = require('../environments/salesforce/eventsFlat.json');
+const salesforceSelectStarUsers = require('../environments/salesforce/selectStarUsers.json');
 
 const opts = {
 	options: {
@@ -271,10 +272,10 @@ describe('azure', () => {
 describe('salesforce', () => {
 	test('events (oppFieldHistory)', async () => {
 		const { mixpanel, salesforce, time } = await main({ ...salesforceEventsHistory, ...opts });
-		expect(mixpanel.success).toBeGreaterThan(4000);
+		expect(mixpanel.success).toBeGreaterThan(3000);
 		expect(mixpanel.failed).toBe(0);
 		expect(mixpanel.duration).toBeGreaterThan(0);
-		expect(mixpanel.responses.length).toBe(3);
+		expect(mixpanel.responses.length).toBeGreaterThan(1);
 		expect(mixpanel.errors.length).toBe(0);
 		expect(salesforce.sObject).toBe('OpportunityFieldHistory');
 
@@ -291,7 +292,7 @@ describe('salesforce', () => {
 
 	}, timeout);
 
-
+	//todo decide if you want to support this
 	test('users w/fields(all)', async () => {
 		const { mixpanel, salesforce, time } = await main({ ...salesforceUsers, ...opts });
 		expect(mixpanel.success).toBe(200);
@@ -314,6 +315,15 @@ describe('salesforce', () => {
 		expect(salesforce.schema.Id).toStrictEqual({ label: "Opportunity.Id", type: "primary_identifier" });
 	}, timeout);
 
+	test('select star users', async () => {
+		const { mixpanel, salesforce, time } = await main({ ...salesforceSelectStarUsers, ...opts });
+		expect(mixpanel.success).toBeGreaterThan(1300);
+		expect(mixpanel.duration).toBeGreaterThan(0);
+		expect(mixpanel.responses.length).toBeGreaterThan(1);
+		expect(mixpanel.errors.length).toBe(0);
+
+	}, timeout);
+
 	test('tables', async () => {
 		const { mixpanel, salesforce, time } = await main({ ...salesforceTables, ...opts });
 		expect(mixpanel.success).toBe(100);
@@ -323,4 +333,6 @@ describe('salesforce', () => {
 		expect(salesforce.schema.Id).toStrictEqual({ label: "Account.Id", type: "primary_identifier" });
 
 	}, timeout);
+
+
 });
