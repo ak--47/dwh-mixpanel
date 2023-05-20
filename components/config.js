@@ -5,8 +5,6 @@ import colors from 'ansi-colors';
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-// eslint-disable-next-line no-unused-vars
-import * as Types from "../types/types.js";
 
 /*
 --------
@@ -21,9 +19,9 @@ DEFAULTS
 // 	insert_id_col: "insert_id"
 // };
 
-/** @type {Types.Options} */
+/** @type {import('../node_modules/mixpanel-import/types/types.d.ts').Options} */
 const defaultImportOptions = {
-	logFile: `./logs/log-${dayjs().format('YYYY-MM-DDTHH.mm-ss')}.txt`,
+	logFile: `log-${dayjs().format('YYYY-MM-DDTHH.mm-ss')}.json`,
 	strict: true,
 	compress: true,
 	verbose: true,
@@ -233,6 +231,7 @@ export default class dwhConfig {
 			compress: opt.compress,
 			strict: opt.strict,
 			logs: false,
+
 			fixData: false,
 			verbose: false,
 			workers: opt.workers,
