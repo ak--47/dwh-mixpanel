@@ -50,6 +50,7 @@ export default class dwhConfig {
 		this.auth = spec.auth || {};
 
 		this.mappings = spec.mappings; //u.objDefault(spec.mappings || {}, defaultMappings);
+		this.aliases = spec.aliases || {};
 		this.options = u.objDefault(spec.options || {}, defaultImportOptions);
 		this.mixpanel = u.objDefault(spec.mixpanel || {}, defaultMixpanel);
 		this.tags = spec.tags || {};

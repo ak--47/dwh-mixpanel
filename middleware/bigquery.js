@@ -1,5 +1,5 @@
 import transformer from '../components/transformer.js';
-import emitter from '../components/emitter.js';
+
 import csvMaker from '../components/csv.js';
 import u from 'ak-tools';
 import { BigQuery } from "@google-cloud/bigquery";
@@ -8,7 +8,7 @@ import sql from 'node-sql-parser';
 import dayjs from "dayjs";
 
 
-export default async function bigquery(config, outStream) {
+export default async function bigquery(config, outStream, emitter) {
 	const { location, query, ...dwhAuth } = config.dwhAuth();
 	const sqlParse = new sql.Parser();
 	let tableList, columnList, ast;
@@ -105,6 +105,8 @@ export default async function bigquery(config, outStream) {
 				.getQueryResultsStream({ highWaterMark: 2000 * config.options.workers, timeoutMs: 0 })
 				.on("error", reject)
 				.on("data", (row) => {
+					//aliases
+					row = u.rnKeys(row, config.aliases || {});
 					outStream.push(mpModel(row));
 				})
 				.on("end", () => {

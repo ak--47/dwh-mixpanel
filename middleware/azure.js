@@ -1,5 +1,4 @@
 import transformer from '../components/transformer.js';
-import emitter from '../components/emitter.js';
 import csvMaker from '../components/csv.js';
 import u from 'ak-tools';
 import mssql from 'mssql';
@@ -7,7 +6,7 @@ import sql from 'node-sql-parser';
 import dayjs from "dayjs";
 
 
-export default async function azure(config, outStream) {
+export default async function azure(config, outStream, emitter) {
 
 	const { query, ...dwhAuth } = config.dwhAuth();
 	const sqlParse = new sql.Parser();
@@ -96,6 +95,8 @@ export default async function azure(config, outStream) {
 		});
 
 		job.on('row', (row) => {
+			//aliases
+			row = u.rnKeys(row, config.aliases || {});
 			outStream.push(mpModel(row));
 		});
 

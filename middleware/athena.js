@@ -1,5 +1,4 @@
 import transformer from '../components/transformer.js';
-import emitter from '../components/emitter.js';
 
 import u from 'ak-tools';
 import sql from 'node-sql-parser';
@@ -7,6 +6,9 @@ import asyncToStream from 'async-iterator-to-stream';
 import _ from 'highland';
 import jsonParser from 'stream-json/jsonl/Parser.js';
 import dayjs from 'dayjs';
+
+process.env.AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE = 1;
+
 
 import {
 	AthenaClient,
@@ -23,7 +25,7 @@ import {
 	DeleteObjectsCommand
 } from "@aws-sdk/client-s3";
 
-export default async function athena(config, outStream) {
+export default async function athena(config, outStream, emitter) {
 	const { query, ...dwhAuth } = config.dwhAuth();
 
 	// * SQL ANALYSIS
@@ -188,7 +190,9 @@ export default async function athena(config, outStream) {
 					emitter.emit('dwh stream start', config);
 				})
 				.on("data", (record) => {
-					outStream.push(mpModel(record.value));
+					//aliases
+					const row = u.rnKeys(record.value, config.aliases || {});
+					outStream.push(mpModel(row));
 				})
 				.on("end", () => {
 					emitter.emit('dwh stream end', config);

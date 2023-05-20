@@ -15,7 +15,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
 // link to a config!
-let current = require("../environments/current.json");
+let current = require("../environments/test.json");
 
 
 // do the thing!
@@ -23,6 +23,9 @@ main(current)
 	.then(result => {
 		//noop
 		// debugger;
+		main(current).then(()=>{
+			debugger
+		})
 	})
 	.catch(e => {
 		//noop

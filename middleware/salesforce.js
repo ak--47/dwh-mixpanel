@@ -1,5 +1,4 @@
 import transformer from '../components/transformer.js';
-import emitter from '../components/emitter.js';
 import csvMaker from '../components/csv.js';
 import u from 'ak-tools';
 import jsforce from 'jsforce';
@@ -8,7 +7,7 @@ import dayjs from "dayjs";
 
 
 
-export default async function salesforce(config, outStream) {
+export default async function salesforce(config, outStream, emitter) {
 	// * AUTH & OPTIONS
 	let connection, urlPrefix, query, prettyLabels, renameId, addUrls, user, password, version, dwhAuth;
 	try {
@@ -145,6 +144,9 @@ export default async function salesforce(config, outStream) {
 
 				//sfdc urls
 				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey || 'Id']}`;
+
+				//aliases
+				row = u.rnKeys(row, config.aliases || {})
 
 				//pretty labels
 				if (prettyLabels) row = u.rnKeys(row, schemaLabels);

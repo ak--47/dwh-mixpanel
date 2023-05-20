@@ -1,5 +1,5 @@
 import transformer from '../components/transformer.js';
-import emitter from '../components/emitter.js';
+
 import csvMaker from '../components/csv.js';
 import u from 'ak-tools';
 import { Snowflake } from "snowflake-promise";
@@ -7,7 +7,7 @@ import sql from 'node-sql-parser';
 import dayjs from 'dayjs'
 
 
-export default async function snowflake(config, outStream) {
+export default async function snowflake(config, outStream, emitter) {
 	const { query, ...dwhAuth } = config.dwhAuth();
 
 	// * SQL ANALYSIS
@@ -91,6 +91,8 @@ export default async function snowflake(config, outStream) {
 				})
 				.on("data", (row) => {
 					emitter.emit('dwh stream start', config);
+					//aliases
+					row = u.rnKeys(row, config.aliases || {});
 					outStream.push(mpModel(row));
 				})
 				.on("end", () => {

@@ -1,9 +1,8 @@
 import mp from "mixpanel-import";
 import Stream from 'stream';
-import emitter from '../components/emitter.js';
 import u from 'ak-tools';
 
-export default function createStream(config, cb = () => { }) {
+export default function createStream(config, emitter, cb = () => { }) {
 
 	const inStream = new Stream.PassThrough({
 		objectMode: true,
