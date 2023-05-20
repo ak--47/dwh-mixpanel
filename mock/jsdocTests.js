@@ -3,6 +3,7 @@ import dwhMp from "../index.js"
 
 const result = await dwhMp({
 	dwh: "athena",
+	
 	mixpanel: {
 		project_id: 420,
 		region: "US",
@@ -10,6 +11,7 @@ const result = await dwhMp({
 	},
 	mappings: {
 		
-	}
+	},
+	
 	
 })

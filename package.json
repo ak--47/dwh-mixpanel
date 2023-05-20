@@ -1,8 +1,9 @@
 {
 	"name": "dwh-mixpanel",
-	"version": "1.0.83",
+	"version": "1.0.84",
 	"description": "rETL from a data warehouse to mixpanel",
 	"main": "index.js",
+	"types": "index.d.ts",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ak--47/dwh-mixpanel.git"
