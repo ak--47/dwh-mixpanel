@@ -1,6 +1,6 @@
 {
 	"name": "dwh-mixpanel",
-	"version": "1.0.85",
+	"version": "1.0.86",
 	"description": "rETL from a data warehouse to mixpanel",
 	"main": "index.js",
 	"types": "index.d.ts",
@@ -21,7 +21,7 @@
 		"aws"
 	],
 	"scripts": {
-		"dev": "nodemon --inspect --ignore ./node_modules/ --ignore ./tmp/ ./tests/scratch.js",
+		"dev": "nodemon --inspect --ignore ./node_modules/ --ignore ./tmp/ ./mock/scratch.js",
 		"cli": "node --inspect index.js",
 		"test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
 		"prune": "rm -rf ./logs/*",
@@ -49,7 +49,7 @@
 		"inquirer": "^9.1.4",
 		"jsforce": "^1.11.0",
 		"lodash": "^4.17.21",
-		"mixpanel-import": "^2.3.6",
+		"mixpanel-import": "^2.3.7",
 		"mssql": "^9.1.1",
 		"node-sql-parser": "^4.6.4",
 		"p-event": "^5.0.1",

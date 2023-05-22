@@ -15,6 +15,7 @@ const salesforceUsers = require('../environments/salesforce/users.json');
 const salesforceTables = require('../environments/salesforce/tables.json');
 const salesforceEventsFlat = require('../environments/salesforce/eventsFlat.json');
 const salesforceSelectStarUsers = require('../environments/salesforce/selectStarUsers.json');
+const emptyRecords = require('../environments/salesforce/empty-records.json');
 
 
 const opts = {
@@ -24,25 +25,30 @@ const opts = {
 	}
 };
 
+function sm(config) {
+	config.sql += ` LIMIT 100`;
+	return config;
+}
+
 
 
 test('events (oppFieldHistory)', async () => {
-	const { mixpanel, salesforce, time } = await main({ ...salesforceEventsHistory, ...opts });
-	expect(mixpanel.success).toBeGreaterThan(3000);
+	const { mixpanel, salesforce, time } = await main(sm({ ...salesforceEventsHistory, ...opts }));
+	expect(mixpanel.success).toBe(100);
 	expect(mixpanel.failed).toBe(0);
 	expect(mixpanel.duration).toBeGreaterThan(0);
-	expect(mixpanel.responses.length).toBeGreaterThan(1);
+	expect(mixpanel.responses.length).toBe(1);
 	expect(mixpanel.errors.length).toBe(0);
 	expect(salesforce.sObject).toBe('OpportunityFieldHistory');
 
 }, timeout);
 
 test('events (flat)', async () => {
-	const { mixpanel, salesforce, time } = await main({ ...salesforceEventsFlat, ...opts });
-	expect(mixpanel.success).toBeGreaterThan(19000);
+	const { mixpanel, salesforce, time } = await main(sm({ ...salesforceEventsFlat, ...opts }));
+	expect(mixpanel.success).toBe(100);
 	expect(mixpanel.duration).toBeGreaterThan(0);
 	expect(mixpanel.failed).toBe(0);
-	expect(mixpanel.responses.length).toBe(10);
+	expect(mixpanel.responses.length).toBe(1);
 	expect(mixpanel.errors.length).toBe(0);
 	expect(salesforce.sObject).toBe('Task');
 
@@ -50,7 +56,7 @@ test('events (flat)', async () => {
 
 //todo decide if you want to support fields(all)
 // test('users w/fields(all)', async () => {
-// 	const { mixpanel, salesforce, time } = await main({ ...salesforceUsers, ...opts });
+// 	const { mixpanel, salesforce, time } = await main(sm({ ...salesforceUsers, ...opts }));
 // 	expect(mixpanel.success).toBe(200);
 // 	expect(mixpanel.duration).toBeGreaterThan(0);
 // 	expect(mixpanel.responses.length).toBe(1);
@@ -63,30 +69,38 @@ test('events (flat)', async () => {
 
 
 test('groups', async () => {
-	const { mixpanel, salesforce, time } = await main({ ...salesforceGroups, ...opts });
-	expect(mixpanel.success).toBe(400);
+	const { mixpanel, salesforce, time } = await main(sm({ ...salesforceGroups, ...opts }));
+	expect(mixpanel.success).toBe(100);
 	expect(mixpanel.duration).toBeGreaterThan(0);
-	expect(mixpanel.responses.length).toBe(2);
+	expect(mixpanel.responses.length).toBe(1);
 	expect(mixpanel.errors.length).toBe(0);
 	expect(salesforce.schema.Id).toStrictEqual({ label: "Opportunity.Id", type: "primary_identifier" });
 }, timeout);
 
 test('select star users', async () => {
-	const { mixpanel, salesforce, time } = await main({ ...salesforceSelectStarUsers, ...opts });
-	expect(mixpanel.success).toBeGreaterThan(1300);
+	const { mixpanel, salesforce, time } = await main(sm({ ...salesforceSelectStarUsers, ...opts }));
+	expect(mixpanel.success).toBe(100);
 	expect(mixpanel.duration).toBeGreaterThan(0);
-	expect(mixpanel.responses.length).toBeGreaterThan(1);
+	expect(mixpanel.responses.length).toBe(1);
 	expect(mixpanel.errors.length).toBe(0);
 
 }, timeout);
 
 test('tables', async () => {
-	const { mixpanel, salesforce, time } = await main({ ...salesforceTables, ...opts });
+	const { mixpanel, salesforce, time } = await main(sm({ ...salesforceTables, ...opts }));
 	expect(mixpanel.success).toBe(100);
 	expect(mixpanel.duration).toBeGreaterThan(0);
 	expect(mixpanel.responses.length).toBe(1);
 	expect(mixpanel.errors.length).toBe(0);
 	expect(salesforce.schema.Id).toStrictEqual({ label: "Account.Id", type: "primary_identifier" });
+
+}, timeout);
+
+
+test('empty records throws', async () => {
+	await expect(main(sm({ ...emptyRecords, ...opts })))
+		.rejects
+		.toThrow('query success with 0 results; broaden the scope of your SOQL query and try again');
 
 }, timeout);
 

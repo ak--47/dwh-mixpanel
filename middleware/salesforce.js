@@ -5,7 +5,10 @@ import jsforce from 'jsforce';
 import sqlParse from 'soql-parser-js';
 import dayjs from "dayjs";
 
-
+//todos: 
+/**
+ * - rework the whole prettyLabels construct; should just be one transform function
+ */
 
 export default async function salesforce(config, outStream, emitter) {
 	// * AUTH & OPTIONS
@@ -78,6 +81,8 @@ export default async function salesforce(config, outStream, emitter) {
 		config.store({ rows: 0 });
 	}
 
+	if (getRowCount.totalSize === 0) throw Error(`query success with 0 results; broaden the scope of your SOQL query and try again`);
+
 	// * METADATA + SCHEMA RESOLUTION
 	const schema = await getSchema(ast, connection, config);
 	config.store({ schema });
@@ -86,9 +91,7 @@ export default async function salesforce(config, outStream, emitter) {
 	const dateFields = u.objFilter(schema, f => f.type.includes('date'));
 	const schemaLabels = objectMap(schema, scheme => scheme.label);
 	const primaryId = u.objFilter(schema, f => f.type === 'primary_identifier');
-	const sObject = config.dwhStore.sObject;
-	const sObjectsSchemas = config.dwhStore.sObjectsSchemas;
-	const isHistoryQuery = config.dwhStore.fieldHistoryQuery;
+	const { sObject, sObjectsSchemas, fieldHistoryQuery: isHistoryQuery } = config.dwhStore;
 	const event_name_col = config.mappings.event_name_col;
 	confirmMappings(config, getRowCount, schemaLabels, prettyLabels, renameId, isHistoryQuery);
 	emitter.emit('dwh query end', config);
@@ -146,7 +149,7 @@ export default async function salesforce(config, outStream, emitter) {
 				if (addUrls) row['salesforce link'] = `${urlPrefix}/${row[idKey || 'Id']}`;
 
 				//aliases
-				row = u.rnKeys(row, config.aliases || {})
+				row = u.rnKeys(row, config.aliases || {});
 
 				//pretty labels
 				if (prettyLabels) row = u.rnKeys(row, schemaLabels);
@@ -369,32 +372,30 @@ function addInsert(row, sObject, isHistoryQuery) {
 // ! mutate the config to make it work with the schema
 function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameId, isHistoryQuery) {
 	// $ check mappings to allow api field names or pretty labels in config if pretty labels are applied
-	if (testResult?.records) {
-		const testRecord = flatten(testResult.records.pop());
-		mapLoop: for (const mapping in config.mappings) {
-			if (mapping === "profileOperation") continue mapLoop;
-			const userInputMapping = config.mappings[mapping];
-			const prettyName = schemaLabels[userInputMapping];
+	const testRecord = flatten(testResult.records.pop());
+	mapLoop: for (const mapping in config.mappings) {
+		if (mapping === "profileOperation") continue mapLoop;
+		const userInputMapping = config.mappings[mapping];
+		const prettyName = schemaLabels[userInputMapping];
 
-			//user put in API name
-			if (!u.isNil(testRecord[userInputMapping]) && prettyName) {
-				if (prettyLabels) config.mappings[mapping] = prettyName;
-				if (renameId && mapping === 'distinct_id_col') config.mappings[mapping] = prettyName;
-			}
+		//user put in API name
+		if (!u.isNil(testRecord[userInputMapping]) && prettyName) {
+			if (prettyLabels) config.mappings[mapping] = prettyName;
+			if (renameId && mapping === 'distinct_id_col') config.mappings[mapping] = prettyName;
+		}
 
-			//user put in pretty name
-			else if (!u.isNil(testRecord[getKeyByValue(schemaLabels, userInputMapping)]) && !prettyName) {
-				if (!prettyLabels) config.mappings[mapping] = getKeyByValue(schemaLabels, userInputMapping);
-			}
+		//user put in pretty name
+		else if (!u.isNil(testRecord[getKeyByValue(schemaLabels, userInputMapping)]) && !prettyName) {
+			if (!prettyLabels) config.mappings[mapping] = getKeyByValue(schemaLabels, userInputMapping);
+		}
 
-			else if (!u.isNil(testRecord[userInputMapping])) {
-				// noop; it exists
-			}
+		else if (!u.isNil(testRecord[userInputMapping])) {
+			// noop; it exists
+		}
 
-			else {
-				if (config.type !== "event" && mapping !== "event_name_col")
-					if (config.verbose) u.cLog(`\n\tlabel "${config.mappings[mapping]}" not found in source data; "${mapping}" may be undefined in mixpanel\n`);
-			}
+		else {
+			if (config.type !== "event" && mapping !== "event_name_col")
+				if (config.verbose) u.cLog(`\n\tlabel "${config.mappings[mapping]}" not found in source data; "${mapping}" may be undefined in mixpanel\n`);
 		}
 	}
 
@@ -407,6 +408,7 @@ function confirmMappings(config, testResult, schemaLabels, prettyLabels, renameI
 		}
 
 	}
+
 }
 
 

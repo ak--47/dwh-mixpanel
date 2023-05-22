@@ -19,7 +19,7 @@ DEFAULTS
 // 	insert_id_col: "insert_id"
 // };
 
-/** @type {import('../node_modules/mixpanel-import/types/types.d.ts').Options} */
+/** @type {import('mixpanel-import').Options} */
 const defaultImportOptions = {
 	logFile: `log-${dayjs().format('YYYY-MM-DDTHH.mm-ss')}.json`,
 	strict: true,
@@ -223,7 +223,7 @@ export default class dwhConfig {
 	mpOpts() {
 		const mp = this.mixpanel;
 		const opt = this.options;
-		/** @type {import('../node_modules/mixpanel-import/types/types.d.ts').Options} */
+		/** @type {import('mixpanel-import').Options} */
 		const options = {
 			recordType: mp.type,
 			region: mp.region,
@@ -231,7 +231,6 @@ export default class dwhConfig {
 			compress: opt.compress,
 			strict: opt.strict,
 			logs: false,
-
 			fixData: false,
 			verbose: false,
 			workers: opt.workers,

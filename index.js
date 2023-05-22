@@ -138,9 +138,9 @@ async function main(params) {
 			console.log(c.redBright.bold(`\n${config.warehouse.toUpperCase()} ERROR:`));
 			console.log(c.redBright.bold(e.message));
 		}
-		else {
-			u.cLog(e, `${config.warehouse} error: ${e.message}`, `CRITICAL`);
-		}
+		// else {
+		// 	u.cLog(e, `${config.warehouse} error: ${e.message}`, `CRITICAL`);
+		// }
 		mpStream.destroy();
 		throw e;
 	}
