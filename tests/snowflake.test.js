@@ -12,7 +12,7 @@ const sflakeEvents = require('../environments/snowflake/events.json');
 const sflakeUsers = require('../environments/snowflake/users.json');
 const sflakeGroups = require('../environments/snowflake/groups.json');
 const sflakeTables = require('../environments/snowflake/tables.json');
-const slakeKeyPair = require('../environments/snowflake/sflake-keypair.json');
+const sflakeKeyPair = require('../environments/snowflake/sflake-keypair.json');
 
 const opts = {
 	options: {
@@ -70,7 +70,7 @@ test('tables', async () => {
 
 
 test('key pair auth', async () => {
-	const { mixpanel, snowflake, time } = await main({ ...slakeKeyPair, ...opts });
+	const { mixpanel, snowflake, time } = await main({ ...sflakeKeyPair, ...opts });
 	expect(mixpanel.success).toBe(100);
 	expect(mixpanel.failed).toBeGreaterThan(0);
 	expect(mixpanel.duration).toBeGreaterThan(0);
