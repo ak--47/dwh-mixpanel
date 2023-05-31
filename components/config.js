@@ -3,6 +3,9 @@ import dayjs from 'dayjs';
 import cliProgress from 'cli-progress';
 import colors from 'ansi-colors';
 import { createRequire } from "node:module";
+import crypto from 'crypto';
+import fs from 'fs';
+
 
 const require = createRequire(import.meta.url);
 
@@ -260,15 +263,24 @@ export default class dwhConfig {
 			};
 		}
 		if (this.dwh === 'snowflake') {
-			return {
+			const auth = {
 				account: this.auth.account,
 				username: this.auth.username,
-				password: this.auth.password,
 				database: this.auth.database,
 				schema: this.auth.schema,
 				warehouse: this.auth.warehouse,
 				query: this.sql
 			};
+
+			if (this.auth.privateKey) {
+				auth.authenticator = "SNOWFLAKE_JWT";
+				auth.privateKey = snowflakePrivKey(this.auth.privateKey, this.auth?.passphrase);
+			}
+			if (this.auth.password) {
+				auth.password = this.auth.password;
+			}
+
+			return auth;
 		}
 
 		if (this.dwh === 'athena') {
@@ -331,4 +343,25 @@ export default class dwhConfig {
 		return true;
 	}
 
+}
+
+// ? https://docs.snowflake.com/en/developer-guide/node-js/nodejs-driver-authenticate#label-nodejs-key-pair-authentication
+function snowflakePrivKey(keyLocation, passphrase = '') {
+	// Read the private key file from the filesystem.
+
+	const privateKeyFile = fs.readFileSync(keyLocation);
+
+	// Get the private key from the file as an object.
+	const privateKeyObject = crypto.createPrivateKey({
+		key: privateKeyFile,
+		format: 'pem',
+		passphrase
+	});
+
+	// Extract the private key from the object as a PEM-encoded string.
+	const privateKey = privateKeyObject.export({
+		format: 'pem',
+		type: 'pkcs8'
+	});
+	return privateKey;
 }
