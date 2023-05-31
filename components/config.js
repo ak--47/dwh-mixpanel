@@ -347,21 +347,25 @@ export default class dwhConfig {
 
 // ? https://docs.snowflake.com/en/developer-guide/node-js/nodejs-driver-authenticate#label-nodejs-key-pair-authentication
 function snowflakePrivKey(keyLocation, passphrase = '') {
-	// Read the private key file from the filesystem.
+	try {
+		// Read the private key file from the filesystem.
+		const privateKeyFile = fs.readFileSync(keyLocation);
 
-	const privateKeyFile = fs.readFileSync(keyLocation);
+		// Get the private key from the file as an object.
+		const privateKeyObject = crypto.createPrivateKey({
+			key: privateKeyFile,
+			format: 'pem',
+			passphrase
+		});
 
-	// Get the private key from the file as an object.
-	const privateKeyObject = crypto.createPrivateKey({
-		key: privateKeyFile,
-		format: 'pem',
-		passphrase
-	});
-
-	// Extract the private key from the object as a PEM-encoded string.
-	const privateKey = privateKeyObject.export({
-		format: 'pem',
-		type: 'pkcs8'
-	});
-	return privateKey;
+		// Extract the private key from the object as a PEM-encoded string.
+		const privateKey = privateKeyObject.export({
+			format: 'pem',
+			type: 'pkcs8'
+		});
+		return privateKey;
+	}
+	catch (e) {
+		throw `could not read private key file at ${keyLocation}:\n${e.message}`;
+	}
 }
