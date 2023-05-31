@@ -179,6 +179,7 @@ async function main(params) {
 		catch (e) {
 			if (config.verbose) {
 				u.cLog(c.red('failed to write logs'));
+				u.cLog(result, `RESULT`, 'INFO');
 			}
 
 		}

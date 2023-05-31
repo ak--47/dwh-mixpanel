@@ -72,7 +72,7 @@ test('tables', async () => {
 test('key pair auth', async () => {
 	const { mixpanel, snowflake, time } = await main({ ...sflakeKeyPair, ...opts });
 	expect(mixpanel.success).toBe(100);
-	expect(mixpanel.failed).toBeGreaterThan(0);
+	expect(mixpanel.failed).toBe(0);
 	expect(mixpanel.duration).toBeGreaterThan(0);
 	expect(mixpanel.responses.length).toBe(1);
 	expect(mixpanel.errors.length).toBe(0);
