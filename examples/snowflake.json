@@ -16,7 +16,7 @@
         "insert_id_col": "qux"
     },
     "options": {
-        "logFile": "./tmp/log.txt",
+        "logFile": "./snowflake-log.txt",
 		"strict": true,
 		"compress": false,
 		"verbose": true,

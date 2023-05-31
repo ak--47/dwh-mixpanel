@@ -11,7 +11,7 @@
         "insert_id_col": "primary_key"
     },
     "options": {
-        "logFile": "./tmp/log.txt",
+        "logFile": "./azure-log.txt",
         "strict": true,
         "compress": false,
         "verbose": true,

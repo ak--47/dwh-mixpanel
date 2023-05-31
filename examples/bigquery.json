@@ -14,7 +14,7 @@
         "insert_id_col": "qux"
     },
     "options": {
-        "logFile": "./tmp/log.txt",
+        "logFile": "./bquery-log.txt",
 		"strict": true,
 		"compress": false,
 		"verbose": true,

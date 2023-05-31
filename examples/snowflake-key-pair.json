@@ -1,0 +1,35 @@
+{
+	"dwh": "snowflake",
+	"auth": {
+		"account": "",
+		"username": "",
+		"privateKey": "./path/to/rsa_key.p8",
+		"passphrase": "this-is-my-passphrase",
+		"database": "",
+		"schema": "",
+		"warehouse": "COMPUTE_WH"
+	},
+	"sql": "select * from eventdata",
+	"mappings": {
+		"event_name_col": "foo",
+		"distinct_id_col": "bar",
+		"time_col": "baz",
+		"insert_id_col": "qux"
+	},
+	"options": {
+		"logFile": "./snowflake-log.txt",
+		"strict": true,
+		"compress": false,
+		"verbose": true,
+		"workers": 20
+	},
+	"mixpanel": {
+		"project_id": "",
+		"api_secret": "",
+		"region": "US",
+		"type": "event"
+	},
+	"tags": {
+		"dwh": "snowflake"
+	}
+}

@@ -15,7 +15,7 @@
 		"profileOperation": "$set"
     },
     "options": {
-        "logFile": "./tmp/log.txt",
+        "logFile": "./salesforce-log.txt",
         "strict": true,
         "compress": false,
         "verbose": true,

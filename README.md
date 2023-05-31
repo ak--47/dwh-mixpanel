@@ -123,16 +123,9 @@ the module returns a `summary` of the entire pipeline, with statistics and logs 
     failed: 0,
     total: 100000,
     requests: 50,
-    recordType: "event",
-    duration: 15314,
-    human: "15.314 seconds",
-    retries: 0,
-    version: "2.2.287",
-    workers: 10,
-    eps: 6529,
-    rps: 3.265,
-    responses: [],
-    errors: [],
+	retries: 0,    
+    responses: [{},{},{}],
+    errors: [{},{},{}],
   },
   bigquery: {
     job: {
@@ -494,17 +487,33 @@ npx dwh-mixpanel ./bigquery-mixpanel
 
 ##### Snowflake
 
-snowflake jobs with authenticate with a user name + password.
+snowflake jobs with authenticate with a user name + password. you may also use [key pair auth](https://docs.snowflake.com/en/user-guide/key-pair-auth)
 
-the fields used for auth are [`account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html) , `username`, and `password`; you will also need to provide your [`warehouse`](https://docs.snowflake.com/en/sql-reference/sql/show-warehouses.html) name, [`database`](https://docs.snowflake.com/en/sql-reference/sql/show-databases.html) name, and table [`schema`](https://docs.snowflake.com/en/sql-reference/sql/show-schemas.html). most of these values can be found in the UI or the SQL console.
+the fields used for auth are: 
+- [`account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html) , 
+- `username`, 
+- `password` (or `privateKey`)
+- [`warehouse`](https://docs.snowflake.com/en/sql-reference/sql/show-warehouses.html) name
+- [`database`](https://docs.snowflake.com/en/sql-reference/sql/show-databases.html) name 
+- [`schema`](https://docs.snowflake.com/en/sql-reference/sql/show-schemas.html) for your table
+
+most of these values can be found in the UI or the SQL console.
 
 ```javascript
 {
 	dwh: "snowflake",
 	auth : {
-			"account": "foobar.us-central1.gcp", // your snowflake identifier
+			// user + pass auth
 			"username": "",
 			"password": "",
+
+			// key pair auth
+			"username": "",
+			"privateKey": "./path/to/rsa_key.p8"
+			"passphrase": "my-passphrase" // for encrypted keys only
+
+			// always required
+			"account": "foobar.us-central1.gcp", // your snowflake identifier			
 			"database": "PROD1", // database to use
 			"schema": "PUBLIC", // schema to use
 			"warehouse": "COMPUTE_WH" //warehouse to use
@@ -512,9 +521,9 @@ the fields used for auth are [`account` identifier](https://docs.snowflake.com/e
 }
 ```
 
-no special permissions are required for snowflake - only that the user/pass you entered can view and query the dataset.
+no special permissions are required for snowflake - only that the user entered can view and query the dataset.
 
-note: 2FA with Snowflake is _not_ currently supported in this module.
+note: 2FA or SSO auth for Snowflake is _not_ currently supported in this module.
 
 <div id="athena"></div>
 
