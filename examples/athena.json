@@ -13,7 +13,7 @@
 		"insert_id_col": "insert_id"
 	},
 	"options": {
-		"logFile": "./tmp/log.txt",
+		"logFile": "./athena-log.txt",
 		"strict": true,
 		"compress": false,
 		"verbose": true,
