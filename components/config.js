@@ -228,6 +228,7 @@ export default class dwhConfig {
 		const opt = this.options;
 		/** @type {import('mixpanel-import').Options} */
 		const options = {
+			...opt,
 			recordType: mp.type,
 			region: mp.region,
 			streamFormat: 'json',
